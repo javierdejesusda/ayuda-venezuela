@@ -47,8 +47,8 @@ describe('LocationCard', () => {
     expect(link.className).toContain('min-w-0');
   });
 
-  it('previews the zone photos as thumbnails served through the resizing endpoint', () => {
-    render(
+  it('shows a single large cover photo (the first one) through the resizing endpoint', () => {
+    const { container } = render(
       <LocationCard
         location={makeLocation({
           fotos: [
@@ -59,17 +59,30 @@ describe('LocationCard', () => {
       />,
     );
 
-    // The thumbnails are decorative (alt=""), so the photo count is exposed on
-    // the list itself rather than on each image.
-    const strip = screen.getByRole('list', { name: '2 fotos' });
-    const imgs = strip.querySelectorAll('img');
-    expect(imgs).toHaveLength(2);
+    // Only the first photo is shown as a large cover; the rest live on the zone
+    // page. The cover is decorative (alt=""), so it carries no accessible name.
+    const imgs = container.querySelectorAll('img');
+    expect(imgs).toHaveLength(1);
     expect(imgs[0].getAttribute('src')).toContain('/render/image/public/fotos/a.jpg');
     expect(imgs[0].getAttribute('src')).toContain('width=');
-    expect(imgs[1].getAttribute('src')).toContain('/render/image/public/fotos/b.jpg');
   });
 
-  it('keeps the photo count available to screen readers via the list label', () => {
+  it('exposes the photo count to screen readers next to the cover', () => {
+    render(
+      <LocationCard
+        location={makeLocation({
+          fotos: [
+            'https://x.supabase.co/storage/v1/object/public/fotos/a.jpg',
+            'https://x.supabase.co/storage/v1/object/public/fotos/b.jpg',
+            'https://x.supabase.co/storage/v1/object/public/fotos/c.jpg',
+          ],
+        })}
+      />,
+    );
+    expect(screen.getByText('3 fotos')).toBeInTheDocument();
+  });
+
+  it('uses the singular label when the zone has a single photo', () => {
     render(
       <LocationCard
         location={makeLocation({
@@ -77,12 +90,12 @@ describe('LocationCard', () => {
         })}
       />,
     );
-    expect(screen.getByRole('list', { name: '1 foto' })).toBeInTheDocument();
+    expect(screen.getByText('1 foto')).toBeInTheDocument();
   });
 
-  it('renders no photo thumbnails when the zone has no photos', () => {
+  it('renders no cover photo when the zone has no photos', () => {
     const { container } = render(<LocationCard location={makeLocation({ fotos: [] })} />);
-    expect(screen.queryByRole('list', { name: /fotos?$/ })).toBeNull();
     expect(container.querySelector('img')).toBeNull();
+    expect(screen.queryByText(/\bfotos?\b/)).toBeNull();
   });
 });

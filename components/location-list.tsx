@@ -26,7 +26,9 @@ export function LocationList({
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    // Single column keeps each horizontal card wide enough for the cover photo
+    // plus its details; two columns only once the container is wide enough.
+    <div className="grid gap-3 lg:grid-cols-2">
       {locations.map((location) => (
         <LocationCard key={location.id} location={location} />
       ))}
