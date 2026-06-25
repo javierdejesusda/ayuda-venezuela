@@ -4,11 +4,11 @@ import { MissingPersonsLink } from '@/components/missing-persons-link';
 import { loadHomeData } from '@/lib/data/home';
 import { getStore } from '@/lib/data/store';
 
-// Live emergency data: render on every request so the list reflects the current
-// database (including reports removed out-of-band, e.g. via the admin tool),
-// instead of serving a statically prerendered snapshot. Realtime keeps open
-// tabs in sync on top of this.
-export const dynamic = 'force-dynamic';
+// ISR with 30-second revalidation. In-app writes call revalidatePath('/')
+// via app/actions.ts for instant on-demand revalidation. Out-of-band changes
+// (e.g. `npm run delete-report`, which bypasses the app) reflect within 30 s,
+// which is an acceptable trade-off for surviving high concurrent load.
+export const revalidate = 30;
 
 export default async function HomePage() {
   const { locations, stats, states, loadFailed } = await loadHomeData(getStore());

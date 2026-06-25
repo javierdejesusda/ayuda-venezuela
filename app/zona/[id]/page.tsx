@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ChevronLeft, MapPin, PhoneCall } from 'lucide-react';
@@ -11,9 +12,15 @@ import { AddNeedForm } from '@/components/add-need-form';
 import { NeedList } from '@/components/need-list';
 import { ZonePhoto } from '@/components/zone-photo';
 
-// Live emergency data: render on every request so a zone reflects the current
-// database (including removal) instead of a statically prerendered snapshot.
-export const dynamic = 'force-dynamic';
+// ISR with 30-second revalidation. In-app writes call revalidatePath('/zona/<id>')
+// via app/actions.ts for instant on-demand revalidation. Out-of-band changes
+// (e.g. `npm run delete-report`, which bypasses the app) reflect within 30 s,
+// which is an acceptable trade-off for surviving high concurrent load.
+export const revalidate = 30;
+
+// Deduplicate the Supabase round-trip that generateMetadata and the page
+// component both need. React cache() memoises per request across module scope.
+const getZone = cache((id: string) => loadZone(getStore(), id));
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -21,13 +28,13 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<{ title: string }> {
   const { id } = await params;
-  const { location } = await loadZone(getStore(), id);
+  const { location } = await getZone(id);
   return { title: location?.nombre ?? 'Zona' };
 }
 
 export default async function ZonaPage({ params }: Props) {
   const { id } = await params;
-  const { location, loadFailed } = await loadZone(getStore(), id);
+  const { location, loadFailed } = await getZone(id);
 
   const backLink = (
     <Link
