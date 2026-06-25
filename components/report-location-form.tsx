@@ -316,6 +316,7 @@ export default function ReportLocationForm(): React.JSX.Element {
         label="Nombre de la zona"
         htmlFor="nombre"
         required
+        hint="Incluye el edificio, los pisos o una referencia (ej. edificio Rita, 6 pisos, frente a la Av Los Próceres)."
         error={fieldErrors.nombre}
       >
         <Input
@@ -337,7 +338,8 @@ export default function ReportLocationForm(): React.JSX.Element {
         <div>
           <h2 className="text-sm font-semibold text-ink">Ubicación</h2>
           <p className="mt-1 text-xs text-ink-faint">
-            Busca la dirección para completar los campos, o ajusta el pin en el mapa.
+            Busca una zona o ciudad para acercar el mapa, luego toca o arrastra el pin
+            en el punto exacto. La búsqueda puede no encontrar calles detalladas en Venezuela.
           </p>
         </div>
 
@@ -346,9 +348,9 @@ export default function ReportLocationForm(): React.JSX.Element {
           onValueChange={setSearchText}
           onSelect={handleSuggestionSelect}
           onSearch={geocodeForwardAction}
-          label="Buscar dirección o lugar"
-          placeholder="Ej. Av. Libertador, Chacao"
-          helpText="Autocompleta y rellena estado, ciudad y zona. También puedes tocar el mapa."
+          label="Buscar zona o ciudad"
+          placeholder="Ej. San Bernardino, Caracas"
+          helpText="Solo para acercar el mapa y rellenar estado, ciudad y zona. El punto exacto lo marcas tocando el mapa."
           disabled={isPending}
         />
 

@@ -211,7 +211,9 @@ export function AddressAutocomplete({
             ))}
 
             {showEmpty && (
-              <li className="px-3.5 py-2 text-sm text-ink-faint">Sin resultados</li>
+              <li className="px-3.5 py-2 text-sm text-ink-faint">
+                Sin resultados. Prueba con la zona o ciudad, o marca el punto tocando el mapa.
+              </li>
             )}
           </ul>
         )}
