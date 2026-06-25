@@ -19,4 +19,16 @@ describe('ZonePhoto', () => {
     const fallback = screen.getByRole('img', { name: /no disponible/i });
     expect(fallback.className).toContain('aspect-square');
   });
+
+  it('serves Supabase Storage photos through the resizing image endpoint', () => {
+    render(
+      <ZonePhoto
+        src="https://x.supabase.co/storage/v1/object/public/fotos/a.jpg"
+        alt="Foto de la zona Centro"
+      />,
+    );
+    const src = screen.getByRole('img', { name: 'Foto de la zona Centro' }).getAttribute('src');
+    expect(src).toContain('/render/image/public/fotos/a.jpg');
+    expect(src).toContain('width=');
+  });
 });

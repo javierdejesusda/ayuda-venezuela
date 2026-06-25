@@ -2,15 +2,19 @@
 
 import { useState } from 'react';
 
+import { transformedFotoUrl } from '@/lib/data/foto-url';
+
 /**
  * A single zone photo from Supabase Storage with a layout-preserving fallback.
- * On blocked or degraded networks the *.supabase.co request fails; onError swaps
- * in a neutral tile so the photo grid never collapses. Raw <img> is intentional:
- * it avoids the image optimizer and a second remote dependency on a censored
- * network.
+ * The src is rewritten to Supabase's image-transformation endpoint so photos are
+ * resized and WebP-encoded at the edge (a large egress win) without pulling in
+ * the Next image optimizer or a second remote host. On blocked or degraded
+ * networks the *.supabase.co request fails; onError swaps in a neutral tile so
+ * the photo grid never collapses.
  */
 export function ZonePhoto({ src, alt }: { src: string; alt: string }) {
   const [failed, setFailed] = useState(false);
+  const optimized = transformedFotoUrl(src);
 
   if (failed) {
     return (
@@ -27,7 +31,7 @@ export function ZonePhoto({ src, alt }: { src: string; alt: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={optimized}
       alt={alt}
       loading="lazy"
       onError={() => setFailed(true)}
