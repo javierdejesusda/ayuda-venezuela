@@ -136,6 +136,15 @@ export interface CreateLocationInput {
 /** Maximum number of photos a single zone report may attach. */
 export const MAX_FOTOS = 4;
 
+/** Maximum size of a single uploaded photo, in megabytes (used in UI copy). */
+export const MAX_FOTO_MB = 10;
+
+/**
+ * Maximum size of a single uploaded photo, in bytes. Kept in sync with the
+ * Storage bucket's `file_size_limit` (see the fotos migrations).
+ */
+export const MAX_FOTO_BYTES = MAX_FOTO_MB * 1024 * 1024;
+
 export interface CreateNeedInput {
   locationId: string;
   categoria: NeedCategory;

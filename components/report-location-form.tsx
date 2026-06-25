@@ -9,11 +9,15 @@ import { createLocationAction } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Label, Select, Textarea } from '@/components/ui/form';
 import { getBrowserSupabase } from '@/lib/data/supabase-browser';
-import { EMERGENCY_STATUSES, MAX_FOTOS, VENEZUELA_STATES } from '@/lib/data/types';
+import { validateFotoFile } from '@/lib/data/foto-validation';
+import {
+  EMERGENCY_STATUSES,
+  MAX_FOTO_MB,
+  MAX_FOTOS,
+  VENEZUELA_STATES,
+} from '@/lib/data/types';
 import { statusMeta } from '@/lib/status';
 import { useRevokeObjectUrlsOnUnmount } from '@/lib/use-revoke-object-urls';
-
-const MAX_FOTO_BYTES = 5 * 1024 * 1024;
 
 interface SelectedFoto {
   id: string;
@@ -136,12 +140,9 @@ export default function ReportLocationForm(): React.JSX.Element {
         rejected = `Solo puedes adjuntar hasta ${MAX_FOTOS} fotos.`;
         break;
       }
-      if (!file.type.startsWith('image/')) {
-        rejected = 'Solo se permiten imágenes.';
-        continue;
-      }
-      if (file.size > MAX_FOTO_BYTES) {
-        rejected = 'Cada imagen debe pesar 5 MB o menos.';
+      const problem = validateFotoFile(file);
+      if (problem) {
+        rejected = problem;
         continue;
       }
       accepted.push({
@@ -411,7 +412,7 @@ export default function ReportLocationForm(): React.JSX.Element {
       <div className="space-y-2">
         <Label htmlFor="fotos">Fotos</Label>
         <p className="text-xs text-ink-faint">
-          Opcional. Hasta {MAX_FOTOS} imágenes de 5 MB como máximo cada una.
+          Opcional. Hasta {MAX_FOTOS} imágenes de {MAX_FOTO_MB} MB como máximo cada una.
         </p>
 
         {fotos.length > 0 && (
