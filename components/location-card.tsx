@@ -1,9 +1,10 @@
 import Link from 'next/link';
 
-import { ChevronRight, Image as ImageIcon, MapPin } from 'lucide-react';
+import { ChevronRight, MapPin } from 'lucide-react';
 
 import { CategoryChip, StatusBadge } from '@/components/status-badges';
-import type { LocationWithNeeds } from '@/lib/data/types';
+import { ZonePhoto } from '@/components/zone-photo';
+import { MAX_FOTOS, type LocationWithNeeds } from '@/lib/data/types';
 
 /** Summary card linking to a single emergency zone. */
 export function LocationCard({ location }: { location: LocationWithNeeds }) {
@@ -11,7 +12,7 @@ export function LocationCard({ location }: { location: LocationWithNeeds }) {
   const openNeeds = location.needs.filter((need) => need.status !== 'cubierto');
   const categories = Array.from(new Set(openNeeds.map((need) => need.categoria))).slice(0, 3);
   const place = [location.zona, location.ciudad, location.estado].filter(Boolean).join(', ');
-  const fotosCount = (location.fotos ?? []).length;
+  const fotos = (location.fotos ?? []).slice(0, MAX_FOTOS);
 
   return (
     <Link
@@ -44,18 +45,24 @@ export function LocationCard({ location }: { location: LocationWithNeeds }) {
         </div>
       )}
 
+      {fotos.length > 0 && (
+        // Decorative previews: the images carry alt="" so they don't pad the
+        // card link's accessible name with "Foto 1 Foto 2 ..."; the list's
+        // aria-label keeps the photo count available to screen readers.
+        <ul className="mt-3 flex gap-1.5" aria-label={`${fotos.length} foto${fotos.length === 1 ? '' : 's'}`}>
+          {fotos.map((foto, index) => (
+            <li key={`${foto}-${index}`} className="w-16 shrink-0">
+              <ZonePhoto src={foto} alt="" size={160} />
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-xs text-ink-soft">
         <span>
           <span className="tabular font-medium text-ink-soft">{summary.total}</span> necesidades
           {summary.urgentes > 0 && (
             <span className="text-danger"> · {summary.urgentes} urgentes</span>
-          )}
-          {fotosCount > 0 && (
-            <span className="inline-flex items-center gap-1">
-              {' · '}
-              <ImageIcon className="h-3.5 w-3.5" aria-hidden />
-              <span aria-label={`${fotosCount} fotos`}>{fotosCount}</span>
-            </span>
           )}
         </span>
         <span className="inline-flex items-center gap-1 text-brand-600 transition-all group-hover:gap-1.5">

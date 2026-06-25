@@ -12,11 +12,21 @@ import { transformedFotoUrl } from '@/lib/data/foto-url';
  * networks the *.supabase.co request fails; onError swaps in a neutral tile so
  * the photo grid never collapses.
  */
-export function ZonePhoto({ src, alt }: { src: string; alt: string }) {
+export function ZonePhoto({
+  src,
+  alt,
+  size = 600,
+}: {
+  src: string;
+  alt: string;
+  /** Edge of the cover-cropped square to request, in pixels. List-card previews
+   * pass a smaller value than the zone gallery to keep egress down. */
+  size?: number;
+}) {
   const [failed, setFailed] = useState(false);
   // The grid renders square thumbnails, so request a small cover-cropped square
   // instead of a full-height image the browser would only shrink and crop.
-  const optimized = transformedFotoUrl(src, { width: 600, height: 600, resize: 'cover' });
+  const optimized = transformedFotoUrl(src, { width: size, height: size, resize: 'cover' });
 
   if (failed) {
     return (
