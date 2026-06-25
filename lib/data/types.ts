@@ -163,6 +163,7 @@ export const CONTACT_CATEGORIES = [
   'hospital',
   'medico',
   'rescate',
+  'apoyo_psicologico',
   'otro',
 ] as const;
 export type ContactCategory = (typeof CONTACT_CATEGORIES)[number];

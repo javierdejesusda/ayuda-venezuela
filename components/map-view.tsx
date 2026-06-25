@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 
 import { useTheme } from '@/components/theme-provider';
+import { resolveMapCoords } from '@/lib/data/geo';
 import type { LocationWithNeeds } from '@/lib/data/types';
 import { EMERGENCY_STATUSES } from '@/lib/data/types';
 import { statusMeta, TONE_HEX } from '@/lib/status';
@@ -57,18 +58,27 @@ function buildPinIcon(hex: string, selected: boolean, pulse: boolean): L.DivIcon
   });
 }
 
-/** Filters locations to those that have valid lat/lng coordinates. */
-function validLocations(
-  locations: LocationWithNeeds[],
-): (LocationWithNeeds & { lat: number; lng: number })[] {
-  return locations.filter(
-    (loc): loc is LocationWithNeeds & { lat: number; lng: number } =>
-      loc.lat !== null && loc.lng !== null,
-  );
+interface ResolvedPoint {
+  loc: LocationWithNeeds;
+  lat: number;
+  lng: number;
+  approximate: boolean;
+}
+
+/** Resolves placeable coordinates for each location, including estado fallback. */
+function resolvePoints(locations: LocationWithNeeds[]): ResolvedPoint[] {
+  const points: ResolvedPoint[] = [];
+  for (const loc of locations) {
+    const resolved = resolveMapCoords({ lat: loc.lat, lng: loc.lng, estado: loc.estado });
+    if (resolved !== null) {
+      points.push({ loc, lat: resolved.lat, lng: resolved.lng, approximate: resolved.approximate });
+    }
+  }
+  return points;
 }
 
 interface BoundsAndSelectionProps {
-  locations: (LocationWithNeeds & { lat: number; lng: number })[];
+  locations: ResolvedPoint[];
   selectedId?: string | null;
   markerRefs: React.MutableRefObject<Map<string, L.Marker>>;
 }
@@ -81,10 +91,10 @@ function BoundsAndSelection({
 }: BoundsAndSelectionProps): null {
   const map = useMap();
 
-  // Auto-fit whenever the set of valid points changes.
+  // Auto-fit whenever the set of placeable points changes.
   useEffect(() => {
     if (locations.length === 0) return;
-    const bounds = L.latLngBounds(locations.map((loc) => [loc.lat, loc.lng]));
+    const bounds = L.latLngBounds(locations.map((p) => [p.lat, p.lng]));
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
   }, [map, locations]);
 
@@ -208,7 +218,7 @@ export default function MapView({
   className,
 }: MapViewProps): React.JSX.Element {
   const markerRefs = useRef<Map<string, L.Marker>>(new Map());
-  const valid = useMemo(() => validLocations(locations), [locations]);
+  const valid = useMemo(() => resolvePoints(locations), [locations]);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const reducedMotion = usePrefersReducedMotion();
@@ -224,21 +234,21 @@ export default function MapView({
     if (reducedMotion) return ids;
     if (selectedId) ids.add(selectedId);
     const topDerrumbe = valid
-      .filter((loc) => loc.status === 'derrumbe')
+      .filter((p) => p.loc.status === 'derrumbe')
       .sort(
         (a, b) =>
-          b.summary.urgentes - a.summary.urgentes ||
-          b.summary.total - a.summary.total,
+          b.loc.summary.urgentes - a.loc.summary.urgentes ||
+          b.loc.summary.total - a.loc.summary.total,
       )
       .slice(0, MAX_PULSING);
-    for (const loc of topDerrumbe) ids.add(loc.id);
+    for (const p of topDerrumbe) ids.add(p.loc.id);
     return ids;
   }, [valid, selectedId, reducedMotion]);
 
   // Memoize icons so markers do not rebuild a DivIcon on every render.
   const iconCache = useMemo(() => {
     const cache = new Map<string, L.DivIcon>();
-    for (const loc of valid) {
+    for (const { loc } of valid) {
       const hex = TONE_HEX[statusMeta[loc.status].tone];
       const isSelected = loc.id === selectedId;
       const shouldPulse = pulsingIds.has(loc.id);
@@ -276,7 +286,7 @@ export default function MapView({
 
         <Legend />
 
-        {valid.map((loc) => {
+        {valid.map(({ loc, lat, lng, approximate }) => {
           const meta = statusMeta[loc.status];
           const hex = TONE_HEX[meta.tone];
           // Built from the same `valid` array in this render, so always present.
@@ -286,7 +296,7 @@ export default function MapView({
           return (
             <Marker
               key={loc.id}
-              position={[loc.lat, loc.lng]}
+              position={[lat, lng]}
               icon={icon}
               ref={(m) => {
                 if (m) {
@@ -332,6 +342,12 @@ export default function MapView({
                       <span>
                         {fotoCount} {fotoCount === 1 ? 'foto' : 'fotos'}
                       </span>
+                    </p>
+                  )}
+
+                  {approximate && (
+                    <p className="text-ink-faint text-xs mb-1.5">
+                      Ubicación aproximada por estado
                     </p>
                   )}
 
