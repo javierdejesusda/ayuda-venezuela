@@ -90,8 +90,7 @@ export const createFundraiserSchema = z.object({
   descripcion: z
     .string()
     .trim()
-    .min(10, 'La descripcion es muy corta')
-    .max(500, 'La descripcion es muy larga'),
+    .min(10, 'La descripcion es muy corta'),
   url: z
     .string()
     .trim()

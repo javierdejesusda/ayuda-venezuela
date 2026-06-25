@@ -81,4 +81,13 @@ describe('createFundraiserAction', () => {
       expect(result.fieldErrors?.url).toBe('Esta recaudacion ya esta publicada.');
     }
   });
+
+  it('accepts a long description with no upper length limit', async () => {
+    const result = await createFundraiserAction({
+      ...VALID,
+      descripcion: 'a'.repeat(1200),
+    });
+    expect(result.ok).toBe(true);
+    expect(createFundraiser).toHaveBeenCalled();
+  });
 });

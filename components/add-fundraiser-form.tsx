@@ -121,7 +121,6 @@ export function AddFundraiserForm(): React.JSX.Element {
           value={values.descripcion}
           onChange={handleChange}
           placeholder="Explica brevemente a quién ayuda la campaña y para qué se usan los fondos."
-          maxLength={500}
           rows={4}
           required
           aria-invalid={!!fieldErrors.descripcion}
