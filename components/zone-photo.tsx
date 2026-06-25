@@ -14,7 +14,9 @@ import { transformedFotoUrl } from '@/lib/data/foto-url';
  */
 export function ZonePhoto({ src, alt }: { src: string; alt: string }) {
   const [failed, setFailed] = useState(false);
-  const optimized = transformedFotoUrl(src);
+  // The grid renders square thumbnails, so request a small cover-cropped square
+  // instead of a full-height image the browser would only shrink and crop.
+  const optimized = transformedFotoUrl(src, { width: 600, height: 600, resize: 'cover' });
 
   if (failed) {
     return (
