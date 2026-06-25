@@ -74,9 +74,11 @@ describe('geolocationErrorMessage', () => {
     expect(msg).not.toContain('Abrir en Safari');
   });
 
-  it('explains a denied permission and offers the map fallback', () => {
+  it('points a denied user to the phone settings path for their browser, with the map fallback', () => {
     const msg = geolocationErrorMessage({ code: 1 }, null);
-    expect(msg.toLowerCase()).toContain('permiso');
+    expect(msg.toLowerCase()).toContain('ajustes del teléfono');
+    expect(msg).toContain('Localización');
+    expect(msg.toLowerCase()).toMatch(/navegador|safari/);
     expect(msg).toContain('mapa');
   });
 

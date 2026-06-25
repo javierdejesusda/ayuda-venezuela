@@ -61,7 +61,7 @@ export function geolocationErrorMessage(
 
   switch (error.code) {
     case 1: // PERMISSION_DENIED
-      return 'No diste permiso de ubicación, o está desactivada para tu navegador. Actívala en los ajustes del teléfono (Privacidad y seguridad, Localización) o marca el punto tocando el mapa.';
+      return 'No pudimos acceder a tu ubicación. Actívala en los ajustes del teléfono (Configuración > Localización > tu navegador, por ejemplo Safari), o marca el punto tocando el mapa.';
     case 2: // POSITION_UNAVAILABLE
       return 'No pudimos determinar tu ubicación en este momento. Marca el punto tocando el mapa.';
     case 3: // TIMEOUT

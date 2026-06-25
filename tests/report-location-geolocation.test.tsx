@@ -59,14 +59,14 @@ describe('ReportLocationForm geolocation errors', () => {
     expect(await screen.findByText(/navegador interno de WhatsApp/i)).toBeInTheDocument();
   });
 
-  it('explains a denied permission in plain Safari and offers the map fallback', async () => {
+  it('points a denied user to the phone settings path, with the map fallback', async () => {
     setUserAgent(SAFARI_IOS);
     rejectWith(1);
     render(<ReportLocationForm />);
 
     clickUseMyLocation();
 
-    const alert = await screen.findByText(/permiso de ubicación/i);
+    const alert = await screen.findByText(/ajustes del teléfono/i);
     expect(alert).toBeInTheDocument();
     expect(alert).toHaveTextContent(/mapa/i);
   });
