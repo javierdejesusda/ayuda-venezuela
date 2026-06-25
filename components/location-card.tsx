@@ -16,7 +16,7 @@ export function LocationCard({ location }: { location: LocationWithNeeds }) {
   return (
     <Link
       href={`/zona/${location.id}`}
-      className="group block rounded-2xl border border-border bg-surface p-4 shadow-card transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift focus-visible:border-brand-400 active:scale-[0.99]"
+      className="group block min-w-0 rounded-2xl border border-border bg-surface p-4 shadow-card transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift focus-visible:border-brand-400 active:scale-[0.99]"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
