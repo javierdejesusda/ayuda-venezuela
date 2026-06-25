@@ -23,46 +23,17 @@ const RIBBON: { key: keyof GlobalStats; label: string; tone: RibbonTone }[] = [
   { key: 'necesidadesAbiertas', label: 'Necesidades abiertas', tone: 'neutral' },
 ];
 
-/*
- * Small red markers dispersed across the silhouette to evoke the affected zones.
- * Positions are box-relative (within the square silhouette), so each dot tracks
- * the landmass at any panel size. The first is the Yaracuy/Carabobo epicenter.
- */
-const QUAKE_DOTS: { left: string; top: string; size: number; opacity: number }[] = [
-  { left: '22%', top: '37%', size: 7, opacity: 0.9 },
-  { left: '13%', top: '31%', size: 5, opacity: 0.7 },
-  { left: '34%', top: '34%', size: 5, opacity: 0.8 },
-  { left: '47%', top: '32%', size: 4, opacity: 0.6 },
-  { left: '60%', top: '36%', size: 5, opacity: 0.7 },
-  { left: '72%', top: '42%', size: 4, opacity: 0.55 },
-  { left: '32%', top: '54%', size: 4, opacity: 0.55 },
-  { left: '54%', top: '56%', size: 4, opacity: 0.5 },
-];
-
 /**
- * Faint Venezuela silhouette watermark anchored to the right of the panel, with
- * several small red markers dispersed across the landmass. The markers live
- * inside the silhouette's square box so they stay on the map at every size.
+ * Faint Venezuela silhouette watermark anchored to the right of the panel. The
+ * map is a calm backdrop, not a data layer: in light mode it tints brand-blue
+ * over a faint brand wash; in dark it is the familiar near-white ghost on the
+ * navy board. Purely decorative.
  */
 function HeroBackdrop() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute -right-16 top-1/2 aspect-square h-[150%] -translate-y-1/2">
-        <VenezuelaSilhouette className="h-full w-full text-white/[0.06]" />
-        {QUAKE_DOTS.map((dot, i) => (
-          <span
-            key={i}
-            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-danger"
-            style={{
-              left: dot.left,
-              top: dot.top,
-              width: dot.size,
-              height: dot.size,
-              opacity: dot.opacity,
-            }}
-          />
-        ))}
-      </div>
+      <div className="absolute inset-0 bg-gradient-to-l from-brand-50 to-transparent dark:hidden" />
+      <VenezuelaSilhouette className="absolute -right-16 top-1/2 h-[150%] w-auto -translate-y-1/2 text-hero-silhouette" />
     </div>
   );
 }
@@ -74,7 +45,7 @@ function HeroBackdrop() {
  */
 export function HomeHero({ stats }: { stats: GlobalStats }) {
   return (
-    <section className="relative overflow-hidden rounded-[1.75rem] bg-hero text-hero-ink shadow-pop">
+    <section className="relative overflow-hidden rounded-[1.75rem] border border-hero-border bg-hero text-hero-ink shadow-pop">
       {/* Top edge: a thin semaphore signal line. */}
       <div
         aria-hidden
@@ -96,7 +67,7 @@ export function HomeHero({ stats }: { stats: GlobalStats }) {
           style={{ animationDelay: '60ms' }}
         >
           Coordinemos la ayuda,{' '}
-          <span className="text-brand-300">zona por zona</span>
+          <span className="text-brand-600 dark:text-brand-300">zona por zona</span>
         </h1>
 
         <p
@@ -120,7 +91,7 @@ export function HomeHero({ stats }: { stats: GlobalStats }) {
           </Link>
           <Link
             href="/telefonos"
-            className="inline-flex h-11 w-full select-none items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 text-base font-medium text-hero-ink backdrop-blur transition-[background-color,transform] duration-150 hover:bg-white/10 active:scale-[0.96] sm:h-12 sm:w-auto"
+            className="inline-flex h-11 w-full select-none items-center justify-center gap-2 rounded-xl border border-hero-border bg-hero-soft px-5 text-base font-medium text-hero-ink backdrop-blur transition-[background-color,transform] duration-150 hover:bg-hero-soft-strong active:scale-[0.96] sm:h-12 sm:w-auto"
           >
             <Phone className="h-5 w-5" aria-hidden />
             Teléfonos de emergencia
