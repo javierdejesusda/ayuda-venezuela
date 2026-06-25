@@ -12,8 +12,8 @@
  * Fonts (--font-bricolage / --font-ibm-plex) are injected by next/font in
  * app/layout.tsx. The status palette (danger/warning/success) is fixed so the
  * emergency "semaphore" reads identically in light and dark mode; surface and
- * ink tokens flip with the color scheme. The "hero" panel tokens stay constant
- * in both schemes so the signature situation board reads the same everywhere.
+ * ink tokens flip with the color scheme. The "hero" situation-board panel also
+ * flips: a bright white instrument in light, the signature navy board in dark.
  */
 @theme {
   --font-sans: var(--font-ibm-plex), ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -67,14 +67,21 @@
   --tone-danger-text: #bd2f34;
   --tone-brand-text: #1f47df;
 
-  /* Signature situation-board panel - constant across light/dark. */
-  --hero-bg: #0d1320;
-  --hero-bg-2: #141d31;
-  --hero-ink: #f5f7fc;
-  --hero-ink-soft: #aeb8cd;
-  --hero-ink-faint: #74809a;
-  --hero-border: rgba(255, 255, 255, 0.09);
-  --hero-line: rgba(255, 255, 255, 0.06);
+  /*
+   * Situation-board panel. Light is a bright instrument surface (dark ink on a
+   * white panel with a faint brand-blue map); dark keeps the signature navy
+   * command board. `*-soft` is the translucent fill the on-panel secondary
+   * action uses; `*-silhouette` tints the Venezuela watermark.
+   */
+  --hero-bg: #ffffff;
+  --hero-ink: #131720;
+  --hero-ink-soft: #4a515f;
+  --hero-ink-faint: #828b9b;
+  --hero-border: rgba(19, 23, 32, 0.1);
+  --hero-line: rgba(19, 23, 32, 0.07);
+  --hero-soft: rgba(19, 23, 32, 0.04);
+  --hero-soft-strong: rgba(19, 23, 32, 0.07);
+  --hero-silhouette: rgba(31, 71, 223, 0.1);
 }
 
 [data-theme='dark'] {
@@ -95,6 +102,17 @@
   --tone-success-text: #54c08a;
   --tone-danger-text: #ff8a8e;
   --tone-brand-text: #8fb0ff;
+
+  /* The signature navy command board (the light default flips to a white panel). */
+  --hero-bg: #0d1320;
+  --hero-ink: #f5f7fc;
+  --hero-ink-soft: #aeb8cd;
+  --hero-ink-faint: #74809a;
+  --hero-border: rgba(255, 255, 255, 0.1);
+  --hero-line: rgba(255, 255, 255, 0.06);
+  --hero-soft: rgba(255, 255, 255, 0.05);
+  --hero-soft-strong: rgba(255, 255, 255, 0.1);
+  --hero-silhouette: rgba(255, 255, 255, 0.06);
 }
 
 @theme inline {
@@ -119,6 +137,9 @@
   --color-hero-ink-faint: var(--hero-ink-faint);
   --color-hero-border: var(--hero-border);
   --color-hero-line: var(--hero-line);
+  --color-hero-soft: var(--hero-soft);
+  --color-hero-soft-strong: var(--hero-soft-strong);
+  --color-hero-silhouette: var(--hero-silhouette);
 }
 
 @layer base {
