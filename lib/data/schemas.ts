@@ -28,9 +28,16 @@ const optionalText = (max: number) =>
     .transform((value) => (value === '' ? undefined : value));
 
 /** Accepts public http(s) URLs and inline data:image URLs (demo mode). */
-const fotoUrl = z
-  .string()
-  .refine((value) => /^(https?:|data:image\/)/.test(value), 'URL de imagen no valida');
+const fotoUrl = z.string().refine((value) => {
+  // Production: only https URLs (Supabase Storage public URLs).
+  if (/^https:\/\//i.test(value)) return true;
+  // Demo only (no Supabase configured, never the shared DB): inline raster
+  // data URLs, never SVG (which can carry scripts).
+  const demo = !(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+  return demo && /^data:image\//i.test(value) && !/^data:image\/svg/i.test(value);
+}, 'URL de imagen no valida');
 
 export const createLocationSchema = z.object({
   nombre: z
