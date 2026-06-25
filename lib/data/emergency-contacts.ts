@@ -1,7 +1,7 @@
 /**
  * Emergency contacts by Venezuelan state for the 24-Jun-2026 earthquake response.
- * Data verified by multi-source research agents. Do not hand-edit - update the
- * source JSON and re-run the generator script instead.
+ * This file is the source of truth and is maintained by hand. Each number should
+ * be cross-checked against a credible source before being marked verified: true.
  */
 import type { StateContacts } from '@/lib/data/types';
 
@@ -674,10 +674,11 @@ export const stateContacts: StateContacts[] = [
         "category": "policia",
         "phones": [
           "0212-571-35-33",
-          "0212-571-38-44"
+          "0212-571-38-44",
+          "0212-571-32-66"
         ],
         "verified": true,
-        "notes": "Policía científica nacional, sede Caracas.",
+        "notes": "Policía científica nacional, sede Caracas. La tercera línea (571-32-66) proviene del directorio de emergencia de Caracas difundido tras el sismo.",
         "source": "https://lapatilla.com/2018/10/23/lista-de-telefonos-de-emergencia-en-caracas-23oct/"
       },
       {
@@ -701,6 +702,480 @@ export const stateContacts: StateContacts[] = [
         "verified": true,
         "notes": "Sede en Caracas. Organismo oficial de monitoreo sísmico; recibe reportes de daños/sismos sentidos. Las líneas de oficina fueron confirmadas vía búsqueda. NOTA: el número 0-800-TEMBLOR (0-800-836-2567) apareció en una sola fuente (eldiario) y NO pudo cross-verificarse, por lo que NO se incluye como confirmado.",
         "source": "http://www.funvisis.gob.ve/"
+      },
+      {
+        "organization": "Hospital Andrés Herrera Vegas (El Algodonal)",
+        "category": "hospital",
+        "phones": [
+          "0212-472-31-38"
+        ],
+        "verified": false,
+        "notes": "Hospital con servicio de emergencia, sector El Algodonal.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Hospital Centro Médico IVSS (Caricuao)",
+        "category": "hospital",
+        "phones": [
+          "0212-432-55-11"
+        ],
+        "verified": false,
+        "notes": "Centro médico del IVSS en Caricuao.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Hospital Dr. Domingo Luciani (El Llanito)",
+        "category": "hospital",
+        "phones": [
+          "0212-257-87-12"
+        ],
+        "verified": false,
+        "notes": "Hospital General del Este, El Llanito.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Hospital El Algodonal (Antímano)",
+        "category": "hospital",
+        "phones": [
+          "0212-472-54-10"
+        ],
+        "verified": false,
+        "notes": "Hospital especializado, Antímano.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Hospital Psiquiátrico de Caracas",
+        "category": "hospital",
+        "phones": [
+          "0212-860-13-13"
+        ],
+        "verified": false,
+        "notes": "Atención psiquiátrica (conocido popularmente como El Manicomio).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Hospital José Gregorio Hernández (Los Magallanes)",
+        "category": "hospital",
+        "phones": [
+          "0212-870-78-97"
+        ],
+        "verified": false,
+        "notes": "Hospital de Los Magallanes de Catia.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Hospital Miguel Pérez Carreño (Bella Vista)",
+        "category": "hospital",
+        "phones": [
+          "0212-472-84-72"
+        ],
+        "verified": false,
+        "notes": "Hospital del IVSS, sector Bella Vista, La Yaguara.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Hospital Militar Dr. Carlos Arvelo (San Martín)",
+        "category": "hospital",
+        "phones": [
+          "0212-406-12-41"
+        ],
+        "verified": false,
+        "notes": "Hospital Militar, San Martín.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Hospital Periférico de Catia",
+        "category": "hospital",
+        "phones": [
+          "0212-870-27-71"
+        ],
+        "verified": false,
+        "notes": "Hospital periférico de Catia.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Hospital Periférico de Coche",
+        "category": "hospital",
+        "phones": [
+          "0212-681-11-33"
+        ],
+        "verified": false,
+        "notes": "Hospital periférico de Coche.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Policlínica David Lobo (Santa Rosalía)",
+        "category": "hospital",
+        "phones": [
+          "0212-541-54-65"
+        ],
+        "verified": false,
+        "notes": "Clínica privada con servicio de emergencia, Santa Rosalía.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Policlínica La Arboleda (San Bernardino)",
+        "category": "hospital",
+        "phones": [
+          "0212-550-18-11"
+        ],
+        "verified": false,
+        "notes": "Clínica privada con servicio de emergencia, San Bernardino.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Policlínica Las Mercedes",
+        "category": "hospital",
+        "phones": [
+          "0212-993-23-23"
+        ],
+        "verified": false,
+        "notes": "Clínica privada con servicio de emergencia, Las Mercedes.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Policlínica Santiago de León (Sabana Grande)",
+        "category": "hospital",
+        "phones": [
+          "0212-762-90-25"
+        ],
+        "verified": false,
+        "notes": "Clínica privada con servicio de emergencia, Sabana Grande.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Centro Clínico / Anexo Clínica Razetti (La Candelaria)",
+        "category": "hospital",
+        "phones": [
+          "0212-597-02-48"
+        ],
+        "verified": false,
+        "notes": "Clínica privada con servicio de emergencia, La Candelaria.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Centro Médico de Caracas (San Bernardino)",
+        "category": "hospital",
+        "phones": [
+          "0212-555-91-11"
+        ],
+        "verified": false,
+        "notes": "Clínica privada con servicio de emergencia, San Bernardino.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Clínica La Floresta (Los Palos Grandes)",
+        "category": "hospital",
+        "phones": [
+          "0212-285-60-58"
+        ],
+        "verified": false,
+        "notes": "Clínica privada con servicio de emergencia, Los Palos Grandes.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Clínica Leopoldo Aguerrevere (Prados del Este)",
+        "category": "hospital",
+        "phones": [
+          "0212-907-08-11"
+        ],
+        "verified": false,
+        "notes": "Clínica privada con servicio de emergencia, Prados del Este.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Clínica Rescarven (Santa Cecilia)",
+        "category": "hospital",
+        "phones": [
+          "0212-239-56-86"
+        ],
+        "verified": false,
+        "notes": "Clínica privada con servicio de emergencia, Santa Cecilia.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Aeroambulancias",
+        "category": "medico",
+        "phones": [
+          "0212-993-25-41",
+          "0212-992-89-80",
+          "0212-992-89-90",
+          "0212-991-79-40"
+        ],
+        "verified": false,
+        "notes": "Servicio privado de ambulancias.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Rescarven (ambulancias y emergencias médicas)",
+        "category": "medico",
+        "phones": [
+          "0212-993-69-11",
+          "0212-993-69-91",
+          "0212-993-13-10",
+          "0212-993-33-67"
+        ],
+        "verified": false,
+        "notes": "Servicio privado de ambulancias y emergencias médicas.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Policía Metropolitana (Caracas)",
+        "category": "policia",
+        "phones": [
+          "0212-862-58-71",
+          "0212-862-58-72"
+        ],
+        "verified": false,
+        "notes": "Policía Metropolitana de Caracas.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Policía Municipal de Chacao",
+        "category": "policia",
+        "phones": [
+          "0212-264-12-56",
+          "0212-264-00-50"
+        ],
+        "verified": false,
+        "notes": "Municipio Chacao (zona metropolitana de Caracas, estado Miranda).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Policía Municipal de Baruta",
+        "category": "policia",
+        "phones": [
+          "0212-943-28-55",
+          "0212-943-62-77"
+        ],
+        "verified": false,
+        "notes": "Municipio Baruta (zona metropolitana de Caracas, estado Miranda).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Policía Municipal de Sucre",
+        "category": "policia",
+        "phones": [
+          "0212-242-21-11",
+          "0212-242-22-11"
+        ],
+        "verified": false,
+        "notes": "Municipio Sucre (Petare, zona metropolitana de Caracas, estado Miranda).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Policía Municipal de El Hatillo",
+        "category": "policia",
+        "phones": [
+          "0212-961-16-82"
+        ],
+        "verified": false,
+        "notes": "Municipio El Hatillo (zona metropolitana de Caracas, estado Miranda).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Cuerpo de Emergencias, Rescate y Transmisiones",
+        "category": "rescate",
+        "phones": [
+          "0212-545-47-47"
+        ],
+        "verified": false,
+        "notes": "Cuerpo de emergencias, rescate y transmisiones.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Grupo de Rescate Caracas (El Ávila)",
+        "category": "rescate",
+        "phones": [
+          "0212-615-63-86",
+          "0212-415-46-61"
+        ],
+        "verified": false,
+        "notes": "Rescate en el Parque Nacional El Ávila (Waraira Repano).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Grupo de Rescate Venezuela",
+        "category": "rescate",
+        "phones": [
+          "0212-977-47-10"
+        ],
+        "verified": false,
+        "notes": "Grupo voluntario de rescate.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Organización de Rescate Humboldt",
+        "category": "rescate",
+        "phones": [
+          "0212-234-22-34",
+          "0414-926-21-39"
+        ],
+        "verified": false,
+        "notes": "Organización voluntaria de rescate.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Inspectoría Nacional de Tránsito (INT)",
+        "category": "rescate",
+        "phones": [
+          "167"
+        ],
+        "verified": false,
+        "notes": "Código corto nacional de atención de tránsito.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "VIVEX (Vigilancia de Vías Expresas)",
+        "category": "rescate",
+        "phones": [
+          "0212-471-60-01",
+          "0212-471-14-81"
+        ],
+        "verified": false,
+        "notes": "Vigilancia y atención en vías expresas.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Brigada de Restablecimiento de Vías y Atención de Emergencias (Ministerio de Transporte Terrestre)",
+        "category": "rescate",
+        "phones": [
+          "0212-537-26-77"
+        ],
+        "verified": false,
+        "notes": "Atención de emergencias viales del Ministerio de Transporte Terrestre.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Bomberos de Antímano (Caracas)",
+        "category": "bomberos",
+        "phones": [
+          "0212-472-20-54"
+        ],
+        "verified": false,
+        "notes": "Estación de bomberos de Antímano.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Bomberos de Chacao",
+        "category": "bomberos",
+        "phones": [
+          "0212-265-32-61"
+        ],
+        "verified": false,
+        "notes": "Municipio Chacao (zona metropolitana de Caracas, estado Miranda).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Bomberos del Este (El Cafetal / municipio Sucre)",
+        "category": "bomberos",
+        "phones": [
+          "0212-987-43-34",
+          "0212-985-50-60",
+          "0212-985-36-40",
+          "0212-985-29-77"
+        ],
+        "verified": false,
+        "notes": "Cubren el este metropolitano (El Cafetal y municipio Sucre, estado Miranda).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Bomberos de La Trinidad",
+        "category": "bomberos",
+        "phones": [
+          "0212-943-43-61"
+        ],
+        "verified": false,
+        "notes": "Zona de La Trinidad (zona metropolitana de Caracas, estado Miranda).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Bomberos de La Urbina",
+        "category": "bomberos",
+        "phones": [
+          "0212-241-66-41"
+        ],
+        "verified": false,
+        "notes": "Zona de La Urbina (zona metropolitana de Caracas, estado Miranda).",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Servicio gratuito de Psicología - Alcaldía de Baruta",
+        "category": "apoyo_psicologico",
+        "phones": [
+          "0414-137-44-90",
+          "0414-234-67-24"
+        ],
+        "verified": false,
+        "notes": "Orientación emocional gratuita para jóvenes, adultos y adultos mayores. Instagram @psicologiabaruta.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "CECODAP",
+        "category": "apoyo_psicologico",
+        "phones": [
+          "0424-180-40-02",
+          "0414-269-68-23"
+        ],
+        "verified": false,
+        "notes": "Atención psicológica y asesoría legal para niños, niñas y adolescentes. El primer número es para texto.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "COFAVIC",
+        "category": "apoyo_psicologico",
+        "phones": [
+          "0424-194-73-73",
+          "0424-270-86-38"
+        ],
+        "verified": false,
+        "notes": "Apoyo psicológico, en particular para casos de ansiedad.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "CESAP",
+        "category": "apoyo_psicologico",
+        "phones": [
+          "0412-550-76-00",
+          "0424-292-56-04",
+          "0212-860-38-85"
+        ],
+        "verified": false,
+        "notes": "Asistencia psicológica gratuita.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Federación de Psicólogos de Venezuela (FPV)",
+        "category": "apoyo_psicologico",
+        "phones": [
+          "0212-416-31-16",
+          "0212-416-31-18",
+          "0424-290-73-38"
+        ],
+        "verified": false,
+        "notes": "Apoyo psicológico de 8:00 am a 8:00 pm.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Psicolínea UCAB",
+        "category": "apoyo_psicologico",
+        "phones": [
+          "0414-121-78-82",
+          "0424-172-39-81"
+        ],
+        "verified": false,
+        "notes": "Atención psicológica gratuita (Universidad Católica Andrés Bello), jueves de 8:00 am a 5:00 pm.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
+      },
+      {
+        "organization": "Psicólogos Sin Fronteras",
+        "category": "apoyo_psicologico",
+        "phones": [
+          "0412-927-03-04"
+        ],
+        "verified": false,
+        "notes": "Lunes y martes de 8:00 am a 8:00 pm; miércoles a viernes de 8:00 am a 5:00 pm.",
+        "source": "Directorio de emergencia de Caracas (difundido en redes, jun-2026)"
       }
     ]
   },

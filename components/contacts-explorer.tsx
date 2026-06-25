@@ -3,6 +3,8 @@
 import { useState } from 'react';
 
 import type { StateContacts } from '@/lib/data/types';
+import { groupContactsByCategory } from '@/lib/data/contacts';
+import { contactCategoryMeta } from '@/lib/status';
 import { Label, Select } from '@/components/ui/form';
 import { ContactCard } from '@/components/contact-card';
 
@@ -43,34 +45,74 @@ export function ContactsExplorer({ states }: ContactsExplorerProps) {
 
       {/* State sections */}
       <div className="space-y-8">
-        {activeStates.map((stateData) => (
-          <div key={stateData.state}>
-            <div className="mb-3 flex flex-wrap items-baseline gap-2">
-              <h2 className="text-lg font-semibold text-ink">{stateData.state}</h2>
-              {stateData.areaCode && (
-                <span className="text-sm text-ink-faint">Código de área: {stateData.areaCode}</span>
+        {activeStates.map((stateData) => {
+          const groups = groupContactsByCategory(stateData.contacts);
+
+          return (
+            <div key={stateData.state}>
+              {/* State heading */}
+              <div className="mb-4 flex flex-wrap items-baseline gap-2">
+                <h2 className="text-lg font-semibold text-ink">{stateData.state}</h2>
+                {stateData.areaCode && (
+                  <span className="text-sm text-ink-faint">
+                    Código de área: {stateData.areaCode}
+                  </span>
+                )}
+              </div>
+
+              {stateData.contacts.length === 0 ? (
+                <p className="text-sm text-ink-faint">
+                  No hay contactos registrados para este estado.
+                </p>
+              ) : (
+                /* Category groups */
+                <div className="space-y-6">
+                  {groups.map((group) => {
+                    const meta = contactCategoryMeta[group.category];
+                    const CategoryIcon = meta.icon;
+                    const headingId = `cat-${stateData.state}-${group.category}`;
+
+                    return (
+                      <div key={`${stateData.state}-${group.category}`}>
+                        {/* Category subheading */}
+                        <div className="mb-3 flex items-center gap-2 border-b border-border pb-2">
+                          <CategoryIcon
+                            className="h-4 w-4 shrink-0 text-ink-faint"
+                            aria-hidden
+                          />
+                          <h3
+                            id={headingId}
+                            className="eyebrow text-ink-soft"
+                          >
+                            {meta.label}
+                          </h3>
+                          <span className="tabular-nums text-xs text-ink-faint">
+                            {group.contacts.length}
+                          </span>
+                        </div>
+
+                        {/* Contact cards grid */}
+                        <ul
+                          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                          role="list"
+                          aria-labelledby={headingId}
+                        >
+                          {group.contacts.map((contact, idx) => (
+                            <li
+                              key={`${stateData.state}-${group.category}-${contact.organization}-${idx}`}
+                            >
+                              <ContactCard contact={contact} />
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
-
-            {stateData.contacts.length === 0 ? (
-              <p className="text-sm text-ink-faint">
-                No hay contactos registrados para este estado.
-              </p>
-            ) : (
-              <ul
-                className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-                role="list"
-                aria-label={`Contactos de emergencia - ${stateData.state}`}
-              >
-                {stateData.contacts.map((contact, idx) => (
-                  <li key={`${stateData.state}-${contact.organization}-${idx}`}>
-                    <ContactCard contact={contact} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

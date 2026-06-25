@@ -11,6 +11,7 @@ import {
   Clock,
   Droplets,
   HandHeart,
+  HeartHandshake,
   HeartPulse,
   Hospital,
   Minus,
@@ -176,5 +177,6 @@ export const contactCategoryMeta: Record<ContactCategory, Meta> = {
   hospital: { label: 'Hospital', tone: 'success', icon: Hospital },
   medico: { label: 'Médico', tone: 'success', icon: Stethoscope },
   rescate: { label: 'Rescate', tone: 'warning', icon: HandHeart },
+  apoyo_psicologico: { label: 'Apoyo psicológico', tone: 'brand', icon: HeartHandshake },
   otro: { label: 'Otro', tone: 'neutral', icon: Phone },
 };
