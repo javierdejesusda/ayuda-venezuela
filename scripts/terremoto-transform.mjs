@@ -139,8 +139,8 @@ export function toProxyUrl(url) {
 
 const DAMAGE_TO_STATUS = new Map([
   ['total', 'derrumbe'],
-  ['severo', 'danado'],
-  ['parcial', 'danado'],
+  ['severo', 'dano_grave'],
+  ['parcial', 'dano_parcial'],
 ]);
 
 /** Map the source damage level onto our EmergencyStatus enum. */
