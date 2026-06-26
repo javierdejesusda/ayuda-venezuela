@@ -7,6 +7,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import { DuplicateFundraiserError } from './fundraiser-url';
 import { applyFilters, sortLocations, withSummary } from './selectors';
+import { PERSONAS_ATRAPADAS_DEFAULT } from './types';
 import type {
   CreateFundraiserInput,
   CreateLocationInput,
@@ -18,6 +19,7 @@ import type {
   NeedCategory,
   NeedRecord,
   NeedStatus,
+  PersonasAtrapadas,
   Urgency,
 } from './types';
 import type { DataStore } from './store';
@@ -35,6 +37,8 @@ interface LocationRow {
   lng: number | null;
   // Optional so older row fixtures (pre-migration) still satisfy this type.
   accuracy_m?: number | null;
+  // Optional so rows from databases without the severity migration still work.
+  personas_atrapadas?: string | null;
   status: string;
   descripcion: string | null;
   contacto_nombre: string | null;
@@ -89,6 +93,7 @@ export function toLocation(r: LocationRow): LocationRecord {
     lng: r.lng,
     accuracyM: r.accuracy_m ?? null,
     status: r.status as EmergencyStatus,
+    personas_atrapadas: (r.personas_atrapadas as PersonasAtrapadas) ?? PERSONAS_ATRAPADAS_DEFAULT,
     descripcion: r.descripcion ?? undefined,
     contactoNombre: r.contacto_nombre ?? undefined,
     contactoTelefono: r.contacto_telefono ?? undefined,
@@ -113,12 +118,12 @@ function toNeed(r: NeedRow): NeedRecord {
 }
 
 /**
- * True when an insert failed only because the `accuracy_m` column is absent
- * (the accuracy migration has not been applied to this database yet).
+ * True when an insert failed because the named column is absent from the table.
+ * Used to detect databases that have not yet had a particular migration applied.
  */
-function isMissingAccuracyColumn(error: unknown): boolean {
+function isMissingColumn(error: unknown, name: string): boolean {
   const message = (error as { message?: string } | null)?.message ?? '';
-  return /accuracy_m/i.test(message);
+  return new RegExp(name, 'i').test(message);
 }
 
 export function createSupabaseStore(url: string, key: string): DataStore {
@@ -180,13 +185,27 @@ export function createSupabaseStore(url: string, key: string): DataStore {
 
       let { data, error } = await client
         .from('locations')
-        .insert({ ...row, accuracy_m: input.accuracyM ?? null })
+        .insert({
+          ...row,
+          accuracy_m: input.accuracyM ?? null,
+          personas_atrapadas: input.personas_atrapadas ?? PERSONAS_ATRAPADAS_DEFAULT,
+        })
         .select('*')
         .single();
 
+      // Databases that have not run the severity migration yet reject the
+      // personas_atrapadas column; retry without it so reports still save.
+      if (error && isMissingColumn(error, 'personas_atrapadas')) {
+        ({ data, error } = await client
+          .from('locations')
+          .insert({ ...row, accuracy_m: input.accuracyM ?? null })
+          .select('*')
+          .single());
+      }
+
       // Databases that have not run the accuracy_m migration yet reject that
       // column; retry without it so reports still save instead of failing.
-      if (error && isMissingAccuracyColumn(error)) {
+      if (error && isMissingColumn(error, 'accuracy_m')) {
         ({ data, error } = await client
           .from('locations')
           .insert(row)

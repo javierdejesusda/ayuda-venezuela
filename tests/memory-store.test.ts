@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { createMemoryStore } from '@/lib/data/memory-store';
+import { SEED } from '@/lib/data/seed';
+import { EMERGENCY_STATUSES } from '@/lib/data/types';
 
 describe('memory store', () => {
   it('starts empty when given no seed', async () => {
@@ -29,7 +31,7 @@ describe('memory store', () => {
       nombre: 'Zona',
       estado: 'Carabobo',
       ciudad: 'Valencia',
-      status: 'danado',
+      status: 'dano_parcial',
     });
     await store.createNeed({
       locationId: loc.id,
@@ -48,7 +50,7 @@ describe('memory store', () => {
       nombre: 'Zona',
       estado: 'Aragua',
       ciudad: 'Maracay',
-      status: 'danado',
+      status: 'dano_parcial',
     });
     const n = await store.createNeed({
       locationId: loc.id,
@@ -86,7 +88,7 @@ describe('memory store', () => {
       nombre: 'Zona con radio',
       estado: 'Miranda',
       ciudad: 'Los Teques',
-      status: 'danado',
+      status: 'dano_parcial',
       lat: 10.3,
       lng: -67.0,
       accuracyM: 200,
@@ -105,5 +107,37 @@ describe('memory store', () => {
       status: 'estable',
     });
     expect(created.accuracyM).toBeNull();
+  });
+
+  it('round-trips personas_atrapadas when provided', async () => {
+    const store = createMemoryStore({ locations: [], needs: [] });
+    const created = await store.createLocation({
+      nombre: 'Zona con atrapados',
+      estado: 'Yaracuy',
+      ciudad: 'San Felipe',
+      status: 'derrumbe',
+      personas_atrapadas: 'si',
+    });
+    expect(created.personas_atrapadas).toBe('si');
+    const detail = await store.getLocation(created.id);
+    expect(detail?.personas_atrapadas).toBe('si');
+  });
+
+  it('defaults personas_atrapadas to no_se when not provided', async () => {
+    const store = createMemoryStore({ locations: [], needs: [] });
+    const created = await store.createLocation({
+      nombre: 'Zona sin dato',
+      estado: 'Carabobo',
+      ciudad: 'Valencia',
+      status: 'dano_grave',
+    });
+    expect(created.personas_atrapadas).toBe('no_se');
+  });
+
+  it('seed fixtures use only valid 5-value statuses (no danado)', () => {
+    for (const loc of SEED.locations) {
+      expect(EMERGENCY_STATUSES).toContain(loc.status);
+      expect(loc.status).not.toBe('danado');
+    }
   });
 });

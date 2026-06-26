@@ -6,14 +6,21 @@
  * validation schemas (see `schemas.ts`).
  */
 
-/** Structural condition reported for an emergency zone. */
+/** Structural condition reported for an emergency zone (ordered most-to-least critical). */
 export const EMERGENCY_STATUSES = [
-  'derrumbe', // building(s) collapsed - people may be trapped
-  'danado', // damaged but standing - risk present
-  'estable', // structurally stable / safe to approach
-  'desconocido', // not yet confirmed
+  'derrumbe',    // rank 0: building(s) collapsed - people may be trapped
+  'dano_grave',  // rank 1: severe structural damage - imminent risk
+  'dano_parcial', // rank 2: partial damage - risk present (replaces legacy 'danado')
+  'desconocido', // rank 3: not yet confirmed
+  'estable',     // rank 4: structurally stable / safe to approach
 ] as const;
 export type EmergencyStatus = (typeof EMERGENCY_STATUSES)[number];
+
+/** Whether trapped persons are reported at this zone. */
+export const PERSONAS_ATRAPADAS = ['si', 'no', 'no_se'] as const;
+export type PersonasAtrapadas = (typeof PERSONAS_ATRAPADAS)[number];
+/** Default value when no information is available about trapped persons. */
+export const PERSONAS_ATRAPADAS_DEFAULT: PersonasAtrapadas = 'no_se';
 
 /** How urgent a specific need is. */
 export const URGENCIES = ['alta', 'media', 'baja'] as const;
@@ -85,6 +92,8 @@ export interface LocationRecord {
   /** Saved coordinate uncertainty radius in meters; null means exact. */
   accuracyM?: number | null;
   status: EmergencyStatus;
+  /** Whether trapped persons are reported; absent/null treated as 'no_se' by consumers. */
+  personas_atrapadas?: PersonasAtrapadas;
   descripcion?: string;
   contactoNombre?: string;
   contactoTelefono?: string;
@@ -130,6 +139,7 @@ export interface CreateLocationInput {
   lng?: number | null;
   accuracyM?: number | null;
   status: EmergencyStatus;
+  personas_atrapadas?: PersonasAtrapadas;
   descripcion?: string;
   contactoNombre?: string;
   contactoTelefono?: string;

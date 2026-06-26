@@ -33,7 +33,7 @@ const locations: LocationRecord[] = [
     zona: 'Altamira',
     lat: 10.4969,
     lng: -66.8443,
-    status: 'danado',
+    status: 'dano_parcial',
     descripcion:
       'Punto de acopio comunitario activo. Reciben agua, alimentos no perecederos y artículos de higiene para distribuir a las zonas más afectadas.',
     createdAt: QUAKE,
@@ -61,7 +61,7 @@ const locations: LocationRecord[] = [
     zona: 'La Cabrera',
     lat: 10.4865,
     lng: -68.1936,
-    status: 'danado',
+    status: 'dano_grave',
     descripcion:
       'Zona cercana al epicentro. Cortes de electricidad y agua. Se requiere apoyo médico y baterías/energía.',
     createdAt: QUAKE,
@@ -91,7 +91,7 @@ const locations: LocationRecord[] = [
     zona: 'Casco central',
     lat: 10.6177,
     lng: -68.692,
-    status: 'danado',
+    status: 'dano_grave',
     descripcion:
       'Localidad junto al epicentro del sismo principal. Viviendas agrietadas. Familias durmiendo a la intemperie.',
     createdAt: QUAKE,
@@ -105,7 +105,7 @@ const locations: LocationRecord[] = [
     zona: 'Centro',
     lat: 10.2353,
     lng: -67.5911,
-    status: 'danado',
+    status: 'dano_parcial',
     descripcion:
       'Hospital operativo recibiendo heridos de varias zonas. Necesitan insumos médicos y donantes de sangre.',
     contactoNombre: 'Cruz Roja Maracay',
@@ -121,7 +121,7 @@ const locations: LocationRecord[] = [
     zona: 'Atlántida',
     lat: 10.5996,
     lng: -67.0258,
-    status: 'danado',
+    status: 'desconocido',
     descripcion:
       'Daños en viviendas de la zona costera. Se organiza acopio de ropa, mantas y alimentos.',
     createdAt: QUAKE,

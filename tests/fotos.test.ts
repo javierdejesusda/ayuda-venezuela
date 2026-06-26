@@ -14,6 +14,23 @@ const baseLocation = {
   status: 'derrumbe' as const,
 };
 
+// Shared row fixture for supabase toLocation tests (no fotos key - pass explicitly).
+const row = {
+  id: 'id-1',
+  nombre: 'Zona',
+  estado: 'Carabobo',
+  ciudad: 'Valencia',
+  zona: null,
+  lat: null,
+  lng: null,
+  status: 'dano_parcial',
+  descripcion: null,
+  contacto_nombre: null,
+  contacto_telefono: null,
+  created_at: '2026-06-25T00:00:00Z',
+  updated_at: '2026-06-25T00:00:00Z',
+};
+
 describe('createLocationSchema fotos', () => {
   it('accepts a valid array of https URLs', () => {
     const result = createLocationSchema.safeParse({
@@ -64,22 +81,6 @@ describe('memory store fotos', () => {
 });
 
 describe('supabase toLocation fotos mapping', () => {
-  const row = {
-    id: 'id-1',
-    nombre: 'Zona',
-    estado: 'Carabobo',
-    ciudad: 'Valencia',
-    zona: null,
-    lat: null,
-    lng: null,
-    status: 'danado',
-    descripcion: null,
-    contacto_nombre: null,
-    contacto_telefono: null,
-    created_at: '2026-06-25T00:00:00Z',
-    updated_at: '2026-06-25T00:00:00Z',
-  };
-
   it('maps a null fotos column to an empty array', () => {
     const mapped = toLocation({ ...row, fotos: null });
     expect(mapped.fotos).toEqual([]);
@@ -88,5 +89,29 @@ describe('supabase toLocation fotos mapping', () => {
   it('preserves a populated fotos column', () => {
     const mapped = toLocation({ ...row, fotos: ['u'] });
     expect(mapped.fotos).toEqual(['u']);
+  });
+});
+
+describe('supabase toLocation personas_atrapadas mapping', () => {
+  const baseRow = { ...row, id: 'id-2', status: 'derrumbe', fotos: null };
+
+  it('maps personas_atrapadas when present in the row', () => {
+    const mapped = toLocation({ ...baseRow, personas_atrapadas: 'si' });
+    expect(mapped.personas_atrapadas).toBe('si');
+  });
+
+  it('maps personas_atrapadas no value', () => {
+    const mapped = toLocation({ ...baseRow, personas_atrapadas: 'no' });
+    expect(mapped.personas_atrapadas).toBe('no');
+  });
+
+  it('defaults personas_atrapadas to no_se when absent from the row (pre-migration rows)', () => {
+    const mapped = toLocation(baseRow as Parameters<typeof toLocation>[0]);
+    expect(mapped.personas_atrapadas).toBe('no_se');
+  });
+
+  it('defaults personas_atrapadas to no_se when the column is null', () => {
+    const mapped = toLocation({ ...baseRow, personas_atrapadas: null });
+    expect(mapped.personas_atrapadas).toBe('no_se');
   });
 });

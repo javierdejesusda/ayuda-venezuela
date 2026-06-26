@@ -11,10 +11,13 @@ import {
   MAX_FOTOS,
   NEED_CATEGORIES,
   NEED_STATUSES,
+  PERSONAS_ATRAPADAS,
+  PERSONAS_ATRAPADAS_DEFAULT,
   URGENCIES,
 } from './types';
 
 export const emergencyStatusSchema = z.enum(EMERGENCY_STATUSES);
+export const personasAtrapadasSchema = z.enum(PERSONAS_ATRAPADAS).default(PERSONAS_ATRAPADAS_DEFAULT);
 export const urgencySchema = z.enum(URGENCIES);
 export const needCategorySchema = z.enum(NEED_CATEGORIES);
 export const needStatusSchema = z.enum(NEED_STATUSES);
@@ -53,6 +56,7 @@ export const createLocationSchema = z.object({
   lng: z.number().min(-180).max(180).nullable().optional(),
   accuracyM: z.number().nonnegative().nullable().optional(),
   status: emergencyStatusSchema,
+  personas_atrapadas: personasAtrapadasSchema,
   descripcion: optionalText(1000),
   contactoNombre: optionalText(80),
   contactoTelefono: optionalText(40),

@@ -5,7 +5,14 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { HomeHero } from '@/components/home-hero';
 import type { GlobalStats } from '@/lib/data/selectors';
 
-const STATS: GlobalStats = { zonas: 3, derrumbes: 1, urgentes: 2, necesidadesAbiertas: 5 };
+const STATS: GlobalStats = {
+  zonas: 3,
+  derrumbes: 1,
+  danoGrave: 1,
+  danoParcial: 1,
+  urgentes: 2,
+  necesidadesAbiertas: 5,
+};
 
 afterEach(() => {
   cleanup();

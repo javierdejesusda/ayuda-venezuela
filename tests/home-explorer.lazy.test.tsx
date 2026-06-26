@@ -13,7 +13,7 @@ function loc(over: Partial<LocationWithNeeds> = {}): LocationWithNeeds {
     ciudad: 'Valencia',
     lat: 10.2,
     lng: -67.6,
-    status: 'danado',
+    status: 'dano_parcial',
     fotos: [],
     createdAt: '2026-06-24T22:10:00Z',
     updatedAt: '2026-06-24T22:10:00Z',

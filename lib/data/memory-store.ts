@@ -12,6 +12,7 @@ import { createId } from '@/lib/utils';
 import { DuplicateFundraiserError } from './fundraiser-url';
 import { applyFilters, sortLocations, withSummary } from './selectors';
 import { SEED } from './seed';
+import { PERSONAS_ATRAPADAS_DEFAULT } from './types';
 import type {
   CreateFundraiserInput,
   CreateLocationInput,
@@ -70,6 +71,7 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
         lng: input.lng ?? null,
         accuracyM: input.accuracyM ?? null,
         status: input.status,
+        personas_atrapadas: input.personas_atrapadas ?? PERSONAS_ATRAPADAS_DEFAULT,
         descripcion: input.descripcion,
         contactoNombre: input.contactoNombre,
         contactoTelefono: input.contactoTelefono,

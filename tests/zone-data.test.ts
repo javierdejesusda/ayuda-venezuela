@@ -12,7 +12,7 @@ function zone(): LocationWithNeeds {
     ciudad: 'Valencia',
     lat: null,
     lng: null,
-    status: 'danado',
+    status: 'dano_parcial',
     fotos: [],
     createdAt: '2026-06-25T00:00:00Z',
     updatedAt: '2026-06-25T00:00:00Z',

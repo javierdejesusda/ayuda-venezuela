@@ -10,7 +10,7 @@ import type {
   NeedRecord,
   NeedSummary,
 } from './types';
-import { VENEZUELA_STATES } from './types';
+import { EMERGENCY_STATUSES, VENEZUELA_STATES } from './types';
 
 export function buildSummary(needs: NeedRecord[]): NeedSummary {
   let pendientes = 0;
@@ -60,12 +60,9 @@ export function applyFilters(
   return locations.filter((l) => matchesFilters(l, filters));
 }
 
-const STATUS_RANK: Record<EmergencyStatus, number> = {
-  derrumbe: 0,
-  danado: 1,
-  desconocido: 2,
-  estable: 3,
-};
+export const STATUS_RANK = Object.fromEntries(
+  EMERGENCY_STATUSES.map((s, i) => [s, i]),
+) as Record<EmergencyStatus, number>;
 
 /** Most critical first: collapse > damaged > unknown > stable, then urgency, then recency. */
 export function sortLocations(locations: LocationWithNeeds[]): LocationWithNeeds[] {
@@ -84,6 +81,8 @@ export function sortLocations(locations: LocationWithNeeds[]): LocationWithNeeds
 export interface GlobalStats {
   zonas: number;
   derrumbes: number;
+  danoGrave: number;
+  danoParcial: number;
   urgentes: number;
   necesidadesAbiertas: number;
 }
@@ -91,16 +90,22 @@ export interface GlobalStats {
 /** Aggregate counts for the home header. */
 export function globalStats(locations: LocationWithNeeds[]): GlobalStats {
   let derrumbes = 0;
+  let danoGrave = 0;
+  let danoParcial = 0;
   let urgentes = 0;
   let necesidadesAbiertas = 0;
   for (const l of locations) {
     if (l.status === 'derrumbe') derrumbes += 1;
+    else if (l.status === 'dano_grave') danoGrave += 1;
+    else if (l.status === 'dano_parcial') danoParcial += 1;
     urgentes += l.summary.urgentes;
     necesidadesAbiertas += l.summary.pendientes + l.summary.enCamino;
   }
   return {
     zonas: locations.length,
     derrumbes,
+    danoGrave,
+    danoParcial,
     urgentes,
     necesidadesAbiertas,
   };
