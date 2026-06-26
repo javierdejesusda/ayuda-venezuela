@@ -126,4 +126,40 @@ describe('LocationCard', () => {
     );
     expect(container.querySelector('.live-ping')).toBeNull();
   });
+
+  it('renders carousel controls when the zone has more than 1 photo', () => {
+    render(
+      <LocationCard
+        location={makeLocation({
+          fotos: [
+            'https://x.supabase.co/storage/v1/object/public/fotos/a.jpg',
+            'https://x.supabase.co/storage/v1/object/public/fotos/b.jpg',
+          ],
+        })}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Foto anterior' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Foto siguiente' })).toBeInTheDocument();
+  });
+
+  it('renders a single image with no carousel controls when the zone has 1 photo', () => {
+    render(
+      <LocationCard
+        location={makeLocation({
+          fotos: ['https://x.supabase.co/storage/v1/object/public/fotos/a.jpg'],
+        })}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'Foto anterior' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Foto siguiente' })).toBeNull();
+    expect(document.querySelectorAll('img')).toHaveLength(1);
+  });
+
+  it('details link navigates to /zona/[id]', () => {
+    render(<LocationCard location={makeLocation()} />);
+    expect(screen.getByRole('link', { name: /San Felipe centro/i })).toHaveAttribute(
+      'href',
+      '/zona/loc_1',
+    );
+  });
 });

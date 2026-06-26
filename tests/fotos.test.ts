@@ -31,6 +31,12 @@ const row = {
   updated_at: '2026-06-25T00:00:00Z',
 };
 
+describe('MAX_FOTOS', () => {
+  it('is 8', () => {
+    expect(MAX_FOTOS).toBe(8);
+  });
+});
+
 describe('createLocationSchema fotos', () => {
   it('accepts a valid array of https URLs', () => {
     const result = createLocationSchema.safeParse({

@@ -172,7 +172,7 @@ export const REPORT_QUOTA_LIMIT = 20;
 export const REPORT_QUOTA_WINDOW_MS = 10 * 60 * 1000;
 
 /** Maximum number of photos a single zone report may attach. */
-export const MAX_FOTOS = 4;
+export const MAX_FOTOS = 8;
 
 /** Maximum size of a single uploaded photo, in megabytes (used in UI copy). */
 export const MAX_FOTO_MB = 10;

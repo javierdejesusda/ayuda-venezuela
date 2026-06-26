@@ -2,12 +2,19 @@ import Link from 'next/link';
 
 import { ChevronRight, MapPin } from 'lucide-react';
 
+import { PhotoCarousel } from '@/components/photo-carousel';
 import { CategoryChip, PersonasAtrapadasBadge, StatusBadge } from '@/components/status-badges';
 import { ZonePhoto } from '@/components/zone-photo';
 import type { LocationWithNeeds } from '@/lib/data/types';
 
-/** Summary card linking to a single emergency zone: a large cover photo beside
- * the zone's details. */
+/**
+ * Summary card linking to a single emergency zone: a large cover photo beside
+ * the zone's details.
+ *
+ * The photo area lives OUTSIDE the navigation Link so carousel prev/next buttons
+ * are never nested inside an anchor (invalid HTML). The details Link is the
+ * primary interactive element and carries the accessible card name.
+ */
 export function LocationCard({ location }: { location: LocationWithNeeds }) {
   const { summary } = location;
   const openNeeds = location.needs.filter((need) => need.status !== 'cubierto');
@@ -17,22 +24,21 @@ export function LocationCard({ location }: { location: LocationWithNeeds }) {
   const cover = fotos[0];
 
   return (
-    <Link
-      href={`/zona/${location.id}`}
-      className="group flex min-w-0 gap-4 rounded-2xl border border-border bg-surface p-4 shadow-card transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift focus-visible:border-brand-400 active:scale-[0.99]"
-    >
-      {cover && (
+    <div className="group flex min-w-0 gap-4 rounded-2xl border border-border bg-surface p-4 shadow-card transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift">
+      {/* Photo area - intentionally NOT inside the navigation Link so carousel
+       * buttons are valid HTML and don't accidentally trigger navigation. */}
+      {fotos.length > 0 && (
         <div className="relative w-28 shrink-0 self-start sm:w-36 lg:w-40">
-          {/* Decorative cover (alt=""): keeps the card link's accessible name
-           * clean. The full set of photos lives on the zone page. */}
-          <ZonePhoto src={cover} alt="" size={400} />
-          {fotos.length > 1 && (
-            <span
-              aria-hidden
-              className="absolute bottom-1.5 right-1.5 rounded-full bg-black/55 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur-sm"
-            >
-              +{fotos.length - 1}
-            </span>
+          {fotos.length > 1 ? (
+            <PhotoCarousel fotos={fotos} />
+          ) : (
+            // Single cover: decorative link that mirrors the card navigation so
+            // clicking the photo still navigates; aria-hidden + tabIndex=-1 keeps
+            // it out of the accessibility tree (the details Link is the only
+            // accessible link and carries the card name).
+            <Link href={`/zona/${location.id}`} aria-hidden tabIndex={-1}>
+              <ZonePhoto src={cover} alt="" size={400} />
+            </Link>
           )}
           <span className="sr-only">
             {fotos.length === 1 ? '1 foto' : `${fotos.length} fotos`}
@@ -40,7 +46,11 @@ export function LocationCard({ location }: { location: LocationWithNeeds }) {
         </div>
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* Primary navigation link: carries the accessible card name (zone nombre). */}
+      <Link
+        href={`/zona/${location.id}`}
+        className="min-w-0 flex flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 rounded-xl"
+      >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="truncate text-base font-semibold text-ink">{location.nombre}</h3>
@@ -84,7 +94,7 @@ export function LocationCard({ location }: { location: LocationWithNeeds }) {
             Ver zona <ChevronRight className="h-3.5 w-3.5" aria-hidden />
           </span>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
