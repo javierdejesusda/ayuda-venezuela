@@ -44,6 +44,7 @@ function stubStore(listLocations: () => Promise<LocationWithNeeds[]>): DataStore
       throw new Error('not implemented');
     },
     checkReportQuota: async () => true,
+    getClusterForLocation: async () => null,
   };
 }
 

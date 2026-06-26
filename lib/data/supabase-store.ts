@@ -330,5 +330,12 @@ export function createSupabaseStore(url: string, key: string): DataStore {
         return true;
       }
     },
+
+    // Stub: real implementation lands in PR11. Returns null until the canonical
+    // loader query (zone_clusters JOIN zone_cluster_members JOIN zone_updates)
+    // is built and the SECURITY DEFINER RPC is in place.
+    async getClusterForLocation() {
+      return null;
+    },
   };
 }

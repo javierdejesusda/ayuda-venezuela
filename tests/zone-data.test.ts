@@ -40,6 +40,7 @@ function stubStore(getLocation: DataStore['getLocation']): DataStore {
       throw new Error('not implemented');
     },
     checkReportQuota: async () => true,
+    getClusterForLocation: async () => null,
   };
 }
 

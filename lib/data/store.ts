@@ -6,6 +6,7 @@
 import { memoryStore } from './memory-store';
 import { createSupabaseStore } from './supabase-store';
 import type {
+  ClusterCanonicalView,
   CreateFundraiserInput,
   CreateLocationInput,
   CreateNeedInput,
@@ -51,6 +52,12 @@ export interface DataStore {
    * emergency report is never blocked by a throttle-table outage.
    */
   checkReportQuota(keyHash: string): Promise<boolean>;
+  /**
+   * Returns the canonical cluster view for the given location, or null when
+   * no cluster has been assigned (yet) or the location does not exist.
+   * Implementation lands in PR11; both stores return null for now.
+   */
+  getClusterForLocation(locationId: string): Promise<ClusterCanonicalView | null>;
 }
 
 let cached: DataStore | null = null;

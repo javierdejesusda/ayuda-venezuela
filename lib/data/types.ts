@@ -254,6 +254,56 @@ export interface CreateFundraiserInput {
   organizador?: string;
 }
 
+// Zone clustering (secret infrastructure; see 20260630000000_zone_clustering.sql).
+
+/** A canonical cluster grouping co-located zone reports. */
+export interface ZoneCluster {
+  id: string;
+  canonicalLocationId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Membership record linking a location to its cluster. */
+export interface ZoneClusterMember {
+  clusterId: string;
+  locationId: string;
+}
+
+/** Discriminated union of auditable events within a cluster. */
+export type ZoneUpdateKind = 'report_added' | 'status_changed' | 'merged_duplicate';
+
+/** Audit event stored on the cluster when its members or status changes. */
+export interface ZoneUpdate {
+  id: string;
+  clusterId: string;
+  kind: ZoneUpdateKind;
+  note: string | null;
+  createdAt: string;
+}
+
+/** Flattened timeline entry used in the canonical cluster view. */
+export interface TimelineEntry {
+  id: string;
+  kind: ZoneUpdateKind;
+  note: string | null;
+  createdAt: string;
+}
+
+/**
+ * Canonical view of a cluster, aggregated from the cluster's members.
+ * NOTE: no 'verificado' field - the app never claims verification.
+ */
+export interface ClusterCanonicalView {
+  canonicalLocationId: string;
+  status: EmergencyStatus;
+  personas_atrapadas: PersonasAtrapadas;
+  fotos: string[];
+  updatedAt: string;
+  memberCount: number;
+  timeline: TimelineEntry[];
+}
+
 /** Generic resource entry (aid orgs, shelters, supply guidance, national lines). */
 export interface ResourceItem {
   name: string;

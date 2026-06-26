@@ -166,6 +166,12 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
       quotaHits.set(keyHash, hits);
       return true;
     },
+
+    // Stub: real implementation lands in PR11 (supabase-store gets the actual
+    // query against zone_clusters/zone_cluster_members/zone_updates).
+    async getClusterForLocation() {
+      return null;
+    },
   };
 }
 
