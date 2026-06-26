@@ -6,7 +6,9 @@
 -- migration to the production database.
 
 -- Drop old constraint so we can backfill and re-add with 5 values.
-ALTER TABLE public.locations DROP CONSTRAINT locations_status_check;
+-- IF EXISTS keeps the migration idempotent: a re-run (or a database where the
+-- constraint was never created) does not abort on a missing-object error.
+ALTER TABLE public.locations DROP CONSTRAINT IF EXISTS locations_status_check;
 
 -- Backfill: legacy 'danado' maps to 'dano_parcial' (the less severe bucket).
 -- Never backfill to dano_grave or derrumbe - those require explicit reporting.

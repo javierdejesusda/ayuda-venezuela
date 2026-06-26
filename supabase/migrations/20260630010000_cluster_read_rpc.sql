@@ -29,7 +29,11 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  -- Gather all member location rows (same columns the TypeScript toLocation mapper reads).
+  -- Gather only the member columns deriveCanonicalView aggregates over. Contact
+  -- PII (contacto_nombre, contacto_telefono) and descripcion are intentionally
+  -- omitted: the canonical view never reads them, so shipping them here would
+  -- leak reporter phone numbers to every zona page load for no benefit. The
+  -- zona detail page surfaces the phone via getLocation, not this RPC.
   -- ORDER BY l.created_at keeps photo-union order stable across ISR regenerations.
   SELECT jsonb_agg(
     jsonb_build_object(
@@ -46,9 +50,6 @@ BEGIN
       'fotos',             l.fotos,
       'fuente_reporte',    l.fuente_reporte,
       'tipo_construccion', l.tipo_construccion,
-      'descripcion',       l.descripcion,
-      'contacto_nombre',   l.contacto_nombre,
-      'contacto_telefono', l.contacto_telefono,
       'created_at',        l.created_at,
       'updated_at',        l.updated_at
     )
@@ -60,12 +61,14 @@ BEGIN
   WHERE m.cluster_id = v_cluster_id;
 
   -- Gather all audit updates for this cluster, ordered chronologically.
+  -- 'note' is omitted on purpose: it embeds internal cluster/location UUIDs and
+  -- the ZoneTimeline component never renders it, so exposing it would leak
+  -- infrastructure identifiers to the client for nothing.
   SELECT jsonb_agg(
     jsonb_build_object(
       'id',         u.id,
       'cluster_id', u.cluster_id,
       'kind',       u.kind,
-      'note',       u.note,
       'created_at', u.created_at
     )
     ORDER BY u.created_at ASC

@@ -91,7 +91,7 @@ $$;
 --
 -- Thresholds mirror lib/data/clustering.ts:
 --   PROXIMITY_RADIUS_M        = 150 m
---   NAME_SIMILARITY_THRESHOLD = 0.3
+--   NAME_SIMILARITY_THRESHOLD = 0.45
 CREATE OR REPLACE FUNCTION public.assign_zone_cluster()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -102,8 +102,25 @@ DECLARE
   v_cluster  uuid;
   v_new_clus uuid;
 BEGIN
+  -- Serialize concurrent inserts that land on the same ~110 m grid cell so two
+  -- simultaneous reports of one site cannot each miss the other's not-yet-
+  -- committed membership row and both spawn a fresh cluster. round(.,3) buckets
+  -- lat/lng to roughly 110 m; the lock is transaction-scoped and released at
+  -- commit. This narrows but does not close adjacent-cell boundary races (two
+  -- reports on opposite sides of a cell edge hash to different keys); those are
+  -- left to the later maintenance job. Skip the lock when coordinates are null
+  -- (no grid cell, and such rows never match on proximity anyway).
+  IF NEW.lat IS NOT NULL AND NEW.lng IS NOT NULL THEN
+    PERFORM pg_advisory_xact_lock(
+      hashtextextended(
+        round(NEW.lat::numeric, 3)::text || ',' || round(NEW.lng::numeric, 3)::text,
+        0
+      )
+    );
+  END IF;
+
   -- Find the closest already-clustered location that is both within 150 m
-  -- and name-similar (pg_trgm similarity >= 0.3).
+  -- and name-similar (pg_trgm similarity >= 0.45).
   -- Null coordinates on either side mean no proximity match is possible.
   SELECT zcm.cluster_id
     INTO v_cluster
@@ -114,7 +131,7 @@ BEGIN
      AND l.lat    IS NOT NULL
      AND l.lng    IS NOT NULL
      AND zone_distance_m(NEW.lat, NEW.lng, l.lat, l.lng) <= 150
-     AND similarity(NEW.nombre, l.nombre) >= 0.3
+     AND similarity(NEW.nombre, l.nombre) >= 0.45
    ORDER BY zone_distance_m(NEW.lat, NEW.lng, l.lat, l.lng) ASC
    LIMIT 1;
 
