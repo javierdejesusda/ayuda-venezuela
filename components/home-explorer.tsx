@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import dynamic from 'next/dynamic';
 
@@ -74,12 +74,14 @@ export function HomeExplorer({
   ciudadesByEstado?: Record<string, string[]>;
 }) {
   const [filters, setFilters] = useState<LocationFilters>({});
-  const [view, setView] = useState<HomeView>('lista');
+  const [view, setView] = useState<HomeView>('mapa');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [displayed, setDisplayed] = useState<LocationWithNeeds[]>(initialLocations);
   const [total, setTotal] = useState(initialTotal);
   const [cursorOffset, setCursorOffset] = useState(initialLocations.length);
-  const [loading, setLoading] = useState(false);
+  // Map is the default view, so when the full set is not already embedded the
+  // skeleton should paint immediately while the all-pins fetch is in flight.
+  const [loading, setLoading] = useState(initialTotal > PAGE_SIZE);
   // mapLocations holds the full matching set for the map surface.
   const [mapLocations, setMapLocations] = useState<LocationWithNeeds[]>(initialLocations);
 
@@ -89,7 +91,7 @@ export function HomeExplorer({
   // Debounce timer for server-path filter changes.
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Shadow of view state kept in a ref so callbacks never capture stale view.
-  const viewRef = useRef<HomeView>('lista');
+  const viewRef = useRef<HomeView>('mapa');
 
   /**
    * Shared fetch dispatcher: increments the request id, sets loading, calls
@@ -173,6 +175,26 @@ export function HomeExplorer({
     },
     [filters, initialTotal, dispatch],
   );
+
+  // Map is the default view. When the full set is not already embedded
+  // (initialTotal > PAGE_SIZE), load every matching zone once on mount so the
+  // map shows all pins instead of only the first page. Done inline (not via
+  // dispatch) so no state is set synchronously in the effect body: `loading`
+  // already starts true in that case, and the setters run only in the async
+  // resolution, guarded by the shared requestId for latest-wins.
+  useEffect(() => {
+    if (initialTotal <= PAGE_SIZE) return;
+    const thisId = ++requestIdRef.current;
+    fetchZonas(buildZonasUrl({}, { all: true }))
+      .then((data) => {
+        if (thisId !== requestIdRef.current) return;
+        setMapLocations(data.items);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (thisId === requestIdRef.current) setLoading(false);
+      });
+  }, [initialTotal]);
 
   const remaining = total - displayed.length;
 

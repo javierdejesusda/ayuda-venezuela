@@ -56,16 +56,18 @@ function makeLocations(n: number, override: Partial<LocationWithNeeds> = {}): Lo
 // ---------------------------------------------------------------------------
 
 describe('HomeExplorer critical-path JS', () => {
-  it('defaults to the list and lazy-loads the map skeleton only when the map opens', () => {
+  it('defaults to the map, painting the cheap skeleton on first load while deferring the heavy Leaflet chunk', () => {
     const { container } = render(
       <HomeExplorer initialLocations={[loc('l1')]} initialTotal={1} states={['Carabobo']} />,
     );
 
-    expect(screen.queryByTestId('map-skeleton')).toBeNull();
-
-    fireEvent.click(screen.getByRole('tab', { name: 'Mapa' }));
+    // The map is the default view, so the cheap skeleton paints on first load...
     expect(screen.getByTestId('map-skeleton')).toBeInTheDocument();
     expect(container.querySelector('.leaflet-container')).toBeNull();
+
+    // Switching to the list tab drops the map skeleton entirely.
+    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
+    expect(screen.queryByTestId('map-skeleton')).toBeNull();
   });
 });
 
@@ -92,22 +94,31 @@ describe('HomeExplorer pagination', () => {
     expect(screen.queryByRole('button', { name: /m[aá]s/i })).toBeNull();
   });
 
-  it('shows "Ver mas" button with remaining count when total exceeds page size', () => {
+  it('shows "Ver mas" button with remaining count when total exceeds page size', async () => {
     const locs = makeLocations(PAGE_SIZE);
     render(
       <HomeExplorer initialLocations={locs} initialTotal={PAGE_SIZE + 10} states={['Carabobo']} />,
     );
+    // Flush the mount all=true fetch (fails silently since fetchMock has no impl,
+    // but clears the loading flag so the list can paint the button text correctly).
+    await act(async () => {});
+    // Map is the default view; switch to list to see pagination controls.
+    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
 
     const btn = screen.getByRole('button', { name: /m[aá]s/i });
     expect(btn).toBeInTheDocument();
     expect(btn.textContent).toMatch(/10/);
   });
 
-  it('button label uses the accented "mas" with tilde', () => {
+  it('button label uses the accented "mas" with tilde', async () => {
     const locs = makeLocations(PAGE_SIZE);
     render(
       <HomeExplorer initialLocations={locs} initialTotal={PAGE_SIZE + 5} states={['Carabobo']} />,
     );
+    // Flush the mount all=true fetch before switching views.
+    await act(async () => {});
+    // Map is the default view; switch to list to see the button.
+    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
 
     const btn = screen.getByRole('button', { name: /m[aá]s/i });
     expect(btn.textContent).toContain('más');
@@ -130,10 +141,17 @@ describe('HomeExplorer pagination', () => {
       />,
     );
 
+    // Flush the mount all=true fetch (updates mapLocations, clears loading).
+    await act(async () => {});
+    // Map is the default view; switch to list to interact with pagination.
+    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
+
     const btn = screen.getByRole('button', { name: /m[aá]s/i });
     fireEvent.click(btn);
 
     await waitFor(() => {
+      // The mount all=true call also fires, so use toHaveBeenCalledWith to find
+      // any call that used the cursor offset rather than asserting exact call count.
       expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining(`cursor=${PAGE_SIZE}`));
     });
 
@@ -146,6 +164,10 @@ describe('HomeExplorer pagination', () => {
     render(
       <HomeExplorer initialLocations={[loc('l1')]} initialTotal={1} states={['Carabobo']} />,
     );
+
+    // The aria-live region is in the list panel; map is the default view,
+    // so switch to list first (initialTotal=1 <= PAGE_SIZE means no mount fetch).
+    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
 
     expect(document.querySelector('[aria-live="polite"]')).toBeInTheDocument();
   });
@@ -166,6 +188,11 @@ describe('HomeExplorer pagination', () => {
         states={['Carabobo', 'Aragua']}
       />,
     );
+
+    // Flush the mount all=true fetch so the view is stable before switching.
+    await act(async () => {});
+    // Switch to list view so the filter change dispatches cursor=0 (not all=true).
+    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
 
     const estadoSelect = screen.getByRole('combobox', { name: /estado/i });
     fireEvent.change(estadoSelect, { target: { value: 'Aragua' } });
@@ -299,6 +326,11 @@ describe('HomeExplorer fetch error handling', () => {
       />,
     );
 
+    // Flush the mount all=true fetch (ok=false -> clears loading, data preserved).
+    await act(async () => {});
+    // Switch to list view to see the "Ver mas" button.
+    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
+
     const estadoSelect = screen.getByRole('combobox', { name: /estado/i });
     fireEvent.change(estadoSelect, { target: { value: 'Aragua' } });
 
@@ -319,6 +351,11 @@ describe('HomeExplorer fetch error handling', () => {
         states={['Carabobo', 'Aragua']}
       />,
     );
+
+    // Flush the mount all=true fetch (rejects -> clears loading, data preserved).
+    await act(async () => {});
+    // Switch to list view to see the "Ver mas" button.
+    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
 
     const estadoSelect = screen.getByRole('combobox', { name: /estado/i });
     fireEvent.change(estadoSelect, { target: { value: 'Aragua' } });
@@ -349,13 +386,17 @@ describe('HomeExplorer latest-wins guard', () => {
   });
 
   it('stale fetch (A) resolving after newer fetch (B) does not overwrite B result', async () => {
-    // Fetch A: its .json() is deferred until we call resolveAJson
+    // Fetch A: its .json() is deferred until we call resolveAJson.
     let resolveAJson!: (data: ZonasResponse) => void;
     const aJson = new Promise<ZonasResponse>((r) => {
       resolveAJson = r;
     });
 
     fetchMock
+      // Mount all=true fetch fires on render (map is the default view). It
+      // stays in flight for the duration of the test and is discarded by the
+      // requestId guard once fetch B wins.
+      .mockReturnValueOnce({ ok: true, json: () => aJson }) // mount: shares the deferred promise
       .mockReturnValueOnce({ ok: true, json: () => aJson }) // fetch A: deferred
       .mockReturnValueOnce({
         ok: true,
@@ -370,37 +411,41 @@ describe('HomeExplorer latest-wins guard', () => {
       />,
     );
 
-    // Initial render: "Ver mas" visible (remaining = 10)
-    expect(screen.getByRole('button', { name: /m[aá]s/i })).toBeInTheDocument();
+    // After render, the mount all=true fetch is in flight (call #1, requestId=1).
+    expect(fetchMock).toHaveBeenCalledTimes(1);
 
     const select = screen.getByRole('combobox', { name: /estado/i });
 
-    // Dispatch A: fire debounce
+    // Dispatch A: filter change in mapa view dispatches all=true (call #2).
     fireEvent.change(select, { target: { value: 'Aragua' } });
     await act(async () => {
       vi.advanceTimersByTime(300);
     });
-    expect(fetchMock).toHaveBeenCalledTimes(1); // fetch A in flight
+    expect(fetchMock).toHaveBeenCalledTimes(2); // mount + fetch A in flight
 
-    // Dispatch B while A is still in flight
+    // Dispatch B while A is still in flight (call #3).
     fireEvent.change(select, { target: { value: 'Miranda' } });
     await act(async () => {
       vi.advanceTimersByTime(300);
     });
-    expect(fetchMock).toHaveBeenCalledTimes(2); // fetch B also dispatched
+    expect(fetchMock).toHaveBeenCalledTimes(3); // mount + fetch A + fetch B
 
-    // Flush microtasks so fetch B (immediate) applies its result
+    // Flush microtasks so fetch B (immediate) applies its result.
     await act(async () => {});
 
-    // B applied: total=0 -> no "Ver mas"
+    // Switch to list view to verify total via the "Ver mas" button.
+    // Switching view does NOT fire a new fetch (only mapa->mapa dispatches).
+    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
+
+    // B applied: total=0 -> no "Ver mas".
     expect(screen.queryByRole('button', { name: /m[aá]s/i })).toBeNull();
 
-    // Now resolve fetch A late (stale; requestId is lower than current)
+    // Now resolve fetch A late (stale; requestId 2 < current 3).
     await act(async () => {
       resolveAJson({ items: makeLocations(PAGE_SIZE), total: PAGE_SIZE + 10, nextCursor: PAGE_SIZE });
     });
 
-    // A's result must be discarded - "Ver mas" must remain absent
+    // A's result must be discarded - "Ver mas" must remain absent.
     expect(screen.queryByRole('button', { name: /m[aá]s/i })).toBeNull();
   });
 });
