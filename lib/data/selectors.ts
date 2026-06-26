@@ -61,6 +61,19 @@ export function applyFilters(
   return locations.filter((l) => matchesFilters(l, filters));
 }
 
+/**
+ * Removes reporter contact PII (name + phone) from a location for the bulk
+ * list/map surfaces, which never render it. The zona detail page still shows
+ * the phone, but it reads through getLocation rather than these bulk payloads,
+ * so stripping here keeps phone numbers out of the home page and /api/zonas.
+ */
+export function stripContactPii(location: LocationWithNeeds): LocationWithNeeds {
+  const copy = { ...location };
+  delete copy.contactoNombre;
+  delete copy.contactoTelefono;
+  return copy;
+}
+
 export const STATUS_RANK = Object.fromEntries(
   EMERGENCY_STATUSES.map((s, i) => [s, i]),
 ) as Record<EmergencyStatus, number>;

@@ -58,6 +58,25 @@ describe('GET /api/zonas', () => {
     expect(body).toEqual({ items, total: 2, nextCursor: null });
   });
 
+  it('strips reporter contact PII (name + phone) from the returned items', async () => {
+    const withContact = loc('l1', {
+      contactoNombre: 'Ana Reportera',
+      contactoTelefono: '+58 412 1234567',
+    });
+    mockListLocationsPage.mockResolvedValue({ items: [withContact], total: 1 });
+
+    const req = new Request('http://localhost/api/zonas');
+    const res = await GET(req);
+    const body = await res.json();
+
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0]).not.toHaveProperty('contactoTelefono');
+    expect(body.items[0]).not.toHaveProperty('contactoNombre');
+    // Non-PII fields the map/list need are untouched.
+    expect(body.items[0].nombre).toBe('Zona l1');
+    expect(body.items[0].status).toBe('dano_parcial');
+  });
+
   it('passes estado filter to the store', async () => {
     mockListLocationsPage.mockResolvedValue({ items: [], total: 0 });
 
