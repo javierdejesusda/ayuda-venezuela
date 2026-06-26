@@ -6,6 +6,7 @@
 import { memoryStore } from './memory-store';
 import { createSupabaseStore } from './supabase-store';
 import type {
+  ClusterCanonicalView,
   CreateFundraiserInput,
   CreateLocationInput,
   CreateNeedInput,
@@ -18,10 +19,22 @@ import type {
   NeedStatus,
 } from './types';
 
+export { PAGE_SIZE, REPORT_QUOTA_LIMIT, REPORT_QUOTA_WINDOW_MS } from './types';
+
 export interface DataStore {
   /** True when running on the in-memory demo backend (data is not shared). */
   isDemo: boolean;
   listLocations(filters?: LocationFilters): Promise<LocationWithNeeds[]>;
+  /**
+   * Returns a single page of filtered, sorted locations plus the total
+   * filtered count (before slicing). Used by the home page and the
+   * /api/zonas Route Handler for bounded pagination.
+   */
+  listLocationsPage(
+    filters: LocationFilters,
+    offset: number,
+    limit: number,
+  ): Promise<{ items: LocationWithNeeds[]; total: number }>;
   getLocation(id: string): Promise<LocationWithNeeds | null>;
   createLocation(input: CreateLocationInput): Promise<LocationRecord>;
   updateLocationStatus(
@@ -32,6 +45,19 @@ export interface DataStore {
   updateNeedStatus(id: string, status: NeedStatus): Promise<NeedRecord | null>;
   listFundraisers(): Promise<Fundraiser[]>;
   createFundraiser(input: CreateFundraiserInput): Promise<Fundraiser>;
+  /**
+   * Returns true when the caller is allowed to submit a report (quota not
+   * exceeded). Returns false when the sliding-window limit is reached.
+   * FAIL-OPEN: always returns true on infrastructure errors so a legitimate
+   * emergency report is never blocked by a throttle-table outage.
+   */
+  checkReportQuota(keyHash: string): Promise<boolean>;
+  /**
+   * Returns the canonical cluster view for the given location, or null when
+   * no cluster has been assigned (yet) or the location does not exist.
+   * Implementation lands in PR11; both stores return null for now.
+   */
+  getClusterForLocation(locationId: string): Promise<ClusterCanonicalView | null>;
 }
 
 let cached: DataStore | null = null;

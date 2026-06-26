@@ -5,9 +5,15 @@ import { ChevronLeft, MapPin, PhoneCall } from 'lucide-react';
 
 import { getStore } from '@/lib/data/store';
 import { loadZone } from '@/lib/data/zone';
-import { statusMeta, toneClasses } from '@/lib/status';
+import { loadZoneCluster } from '@/lib/data/zone-cluster';
+import { buildDirectionsLinks } from '@/lib/directions';
+import { FUENTE_REPORTE_LABELS } from '@/lib/data/types';
+import { resolveStatusMeta, toneClasses } from '@/lib/status';
 import { formatRelativeTime, telHref } from '@/lib/utils';
-import { StatusBadge } from '@/components/status-badges';
+import { SharePanel } from '@/components/share-panel';
+import { GroupedReportsNote } from '@/components/grouped-reports-note';
+import { PersonasAtrapadasBadge, StatusBadge } from '@/components/status-badges';
+import { ZoneTimeline } from '@/components/zone-timeline';
 import { AddNeedForm } from '@/components/add-need-form';
 import { NeedList } from '@/components/need-list';
 import { ZonePhotoGallery } from '@/components/zone-photo-gallery';
@@ -34,7 +40,11 @@ export async function generateMetadata({ params }: Props): Promise<{ title: stri
 
 export default async function ZonaPage({ params }: Props) {
   const { id } = await params;
-  const { location, loadFailed } = await getZone(id);
+  // Run zone load and cluster load in parallel; cluster failure is non-fatal.
+  const [{ location, loadFailed }, cluster] = await Promise.all([
+    getZone(id),
+    loadZoneCluster(id, getStore()),
+  ]);
 
   const backLink = (
     <Link
@@ -67,10 +77,20 @@ export default async function ZonaPage({ params }: Props) {
 
   const { total, pendientes, urgentes, cubiertos } = location.summary;
 
-  const tone = statusMeta[location.status].tone;
+  // When a cluster canonical view is available, override severity-derived
+  // values with the cluster aggregate (most-severe member wins).
+  const effectiveStatus = cluster?.status ?? location.status;
+  const effectivePersonasAtrapadas = cluster?.personas_atrapadas ?? location.personas_atrapadas;
+  const effectiveFotos = cluster?.fotos ?? location.fotos ?? [];
+
+  const tone = resolveStatusMeta(effectiveStatus).tone;
   const tones = toneClasses(tone);
-  const isDerrumbe = location.status === 'derrumbe';
-  const fotos = location.fotos ?? [];
+  const isDerrumbe = effectiveStatus === 'derrumbe';
+  const fotos = effectiveFotos;
+  const dirs = buildDirectionsLinks(location.lat, location.lng);
+
+  const dirLinkClass =
+    'inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50';
 
   return (
     <div className="mx-auto max-w-2xl pb-24 pt-4">
@@ -101,12 +121,51 @@ export default async function ZonaPage({ params }: Props) {
           )}
 
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={location.status} />
+            <StatusBadge status={effectiveStatus} />
             <span className="text-xs text-ink-faint">
               Actualizado {formatRelativeTime(location.updatedAt)}
             </span>
           </div>
+
+          {effectivePersonasAtrapadas === 'si' && (
+            <PersonasAtrapadasBadge value={effectivePersonasAtrapadas} />
+          )}
+
+          <GroupedReportsNote memberCount={cluster?.memberCount ?? 1} />
         </div>
+
+        <SharePanel
+          kind="zone"
+          zone={{ id: location.id, nombre: location.nombre, ciudad: location.ciudad }}
+        />
+
+        {dirs && (
+          <section aria-labelledby="como-llegar-heading">
+            <h2 id="como-llegar-heading" className="mb-2 text-sm font-semibold text-ink">
+              Cómo llegar
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={dirs.google}
+                aria-label="Cómo llegar con Google Maps"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={dirLinkClass}
+              >
+                Google Maps
+              </a>
+              <a
+                href={dirs.osm}
+                aria-label="Cómo llegar con OpenStreetMap"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={dirLinkClass}
+              >
+                OpenStreetMap
+              </a>
+            </div>
+          </section>
+        )}
 
         {location.contactoTelefono && (
           <div className="flex flex-col items-start gap-1">
@@ -125,8 +184,29 @@ export default async function ZonaPage({ params }: Props) {
           <p className="text-sm leading-relaxed text-ink-soft">{location.descripcion}</p>
         )}
 
+        {(location.fuente_reporte || location.tipo_construccion) && (
+          <dl className="space-y-1 text-sm text-ink-soft">
+            {location.fuente_reporte && (
+              <div className="flex gap-2">
+                <dt className="font-medium text-ink">Fuente del reporte:</dt>
+                <dd>{FUENTE_REPORTE_LABELS[location.fuente_reporte]}</dd>
+              </div>
+            )}
+            {location.tipo_construccion && (
+              <div className="flex gap-2">
+                <dt className="font-medium text-ink">Tipo de construcción:</dt>
+                <dd>{location.tipo_construccion}</dd>
+              </div>
+            )}
+          </dl>
+        )}
+
         {fotos.length > 0 && (
           <ZonePhotoGallery fotos={fotos} zoneName={location.nombre} />
+        )}
+
+        {cluster && cluster.timeline.length > 0 && (
+          <ZoneTimeline entries={cluster.timeline} />
         )}
 
         {total > 0 && (

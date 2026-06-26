@@ -7,11 +7,12 @@ import { Image as ImageIcon, LocateFixed } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 
+import { PersonasAtrapadasBadge } from '@/components/status-badges';
 import { useTheme } from '@/components/theme-provider';
 import { resolveMapCoords } from '@/lib/data/geo';
 import type { LocationWithNeeds } from '@/lib/data/types';
 import { EMERGENCY_STATUSES } from '@/lib/data/types';
-import { statusMeta, TONE_HEX } from '@/lib/status';
+import { resolveStatusMeta, statusMeta, TONE_HEX } from '@/lib/status';
 import { usePrefersReducedMotion } from '@/lib/use-prefers-dark';
 
 // Cap on how many derrumbe pins may pulse so battery / GPU stays bounded.
@@ -164,7 +165,7 @@ function GeolocationButton(): React.JSX.Element {
 }
 
 /**
- * Compact overlay listing all four statuses with color swatch + label.
+ * Compact overlay listing all five statuses with color swatch + label.
  * Below sm it collapses to an "Estado" pill so it never covers top-right pins;
  * at sm and up it stays open.
  */
@@ -261,7 +262,7 @@ export default function MapView({
   const iconCache = useMemo(() => {
     const cache = new Map<string, L.DivIcon>();
     for (const { loc } of valid) {
-      const hex = TONE_HEX[statusMeta[loc.status].tone];
+      const hex = TONE_HEX[resolveStatusMeta(loc.status).tone];
       const isSelected = loc.id === selectedId;
       const shouldPulse = pulsingIds.has(loc.id);
       cache.set(loc.id, buildPinIcon(hex, isSelected, shouldPulse));
@@ -300,7 +301,7 @@ export default function MapView({
 
         {valid.map(({ loc, lat, lng, approximate, accuracyM }) => {
           if (!approximate || accuracyM <= 0) return null;
-          const hex = TONE_HEX[statusMeta[loc.status].tone];
+          const hex = TONE_HEX[resolveStatusMeta(loc.status).tone];
           return (
             <Circle
               key={`area-${loc.id}`}
@@ -319,7 +320,7 @@ export default function MapView({
         })}
 
         {valid.map(({ loc, lat, lng, approximate }) => {
-          const meta = statusMeta[loc.status];
+          const meta = resolveStatusMeta(loc.status);
           const hex = TONE_HEX[meta.tone];
           // Built from the same `valid` array in this render, so always present.
           const icon = iconCache.get(loc.id) as L.DivIcon;
@@ -381,6 +382,12 @@ export default function MapView({
                     <p className="text-ink-faint text-xs mb-1.5">
                       Ubicación aproximada (área)
                     </p>
+                  )}
+
+                  {loc.personas_atrapadas === 'si' && (
+                    <div className="mb-2">
+                      <PersonasAtrapadasBadge value={loc.personas_atrapadas} />
+                    </div>
                   )}
 
                   <a

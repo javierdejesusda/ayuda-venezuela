@@ -10,7 +10,7 @@ import type {
   NeedRecord,
   NeedSummary,
 } from './types';
-import { VENEZUELA_STATES } from './types';
+import { EMERGENCY_STATUSES, VENEZUELA_STATES } from './types';
 
 export function buildSummary(needs: NeedRecord[]): NeedSummary {
   let pendientes = 0;
@@ -37,6 +37,7 @@ export function withSummary(
 
 export function matchesFilters(loc: LocationWithNeeds, f: LocationFilters): boolean {
   if (f.estado && loc.estado !== f.estado) return false;
+  if (f.ciudad && loc.ciudad !== f.ciudad) return false;
   if (f.status && loc.status !== f.status) return false;
   if (f.categoria && !loc.needs.some((n) => n.categoria === f.categoria)) return false;
   if (f.soloUrgentes && loc.summary.urgentes <= 0) return false;
@@ -60,12 +61,22 @@ export function applyFilters(
   return locations.filter((l) => matchesFilters(l, filters));
 }
 
-const STATUS_RANK: Record<EmergencyStatus, number> = {
-  derrumbe: 0,
-  danado: 1,
-  desconocido: 2,
-  estable: 3,
-};
+/**
+ * Removes reporter contact PII (name + phone) from a location for the bulk
+ * list/map surfaces, which never render it. The zona detail page still shows
+ * the phone, but it reads through getLocation rather than these bulk payloads,
+ * so stripping here keeps phone numbers out of the home page and /api/zonas.
+ */
+export function stripContactPii(location: LocationWithNeeds): LocationWithNeeds {
+  const copy = { ...location };
+  delete copy.contactoNombre;
+  delete copy.contactoTelefono;
+  return copy;
+}
+
+export const STATUS_RANK = Object.fromEntries(
+  EMERGENCY_STATUSES.map((s, i) => [s, i]),
+) as Record<EmergencyStatus, number>;
 
 /** Most critical first: collapse > damaged > unknown > stable, then urgency, then recency. */
 export function sortLocations(locations: LocationWithNeeds[]): LocationWithNeeds[] {
@@ -84,6 +95,8 @@ export function sortLocations(locations: LocationWithNeeds[]): LocationWithNeeds
 export interface GlobalStats {
   zonas: number;
   derrumbes: number;
+  danoGrave: number;
+  danoParcial: number;
   urgentes: number;
   necesidadesAbiertas: number;
 }
@@ -91,19 +104,61 @@ export interface GlobalStats {
 /** Aggregate counts for the home header. */
 export function globalStats(locations: LocationWithNeeds[]): GlobalStats {
   let derrumbes = 0;
+  let danoGrave = 0;
+  let danoParcial = 0;
   let urgentes = 0;
   let necesidadesAbiertas = 0;
   for (const l of locations) {
     if (l.status === 'derrumbe') derrumbes += 1;
+    else if (l.status === 'dano_grave') danoGrave += 1;
+    else if (l.status === 'dano_parcial') danoParcial += 1;
     urgentes += l.summary.urgentes;
     necesidadesAbiertas += l.summary.pendientes + l.summary.enCamino;
   }
   return {
     zonas: locations.length,
     derrumbes,
+    danoGrave,
+    danoParcial,
     urgentes,
     necesidadesAbiertas,
   };
+}
+
+/**
+ * Returns distinct, sorted ciudad values for locations whose estado matches the
+ * given value. Returns an empty array when `estado` is falsy or no matches exist.
+ * Locations with an empty `ciudad` are excluded from the results.
+ */
+export function availableCiudadesForEstado(
+  locations: LocationRecord[],
+  estado: string,
+): string[] {
+  if (!estado) return [];
+  const seen = new Set<string>();
+  for (const loc of locations) {
+    if (loc.estado === estado && loc.ciudad) seen.add(loc.ciudad);
+  }
+  return Array.from(seen).sort((a, b) => a.localeCompare(b, 'es'));
+}
+
+/**
+ * Returns a map from each estado to its distinct sorted ciudades. Estados with
+ * only empty ciudades are omitted. Used to thread city options server-side in a
+ * single object so the client never has to derive them from a partial list.
+ */
+export function ciudadesByEstado(locations: LocationRecord[]): Record<string, string[]> {
+  const map: Record<string, Set<string>> = {};
+  for (const loc of locations) {
+    if (!loc.ciudad) continue;
+    if (!map[loc.estado]) map[loc.estado] = new Set();
+    map[loc.estado].add(loc.ciudad);
+  }
+  const result: Record<string, string[]> = {};
+  for (const [estado, set] of Object.entries(map)) {
+    result[estado] = Array.from(set).sort((a, b) => a.localeCompare(b, 'es'));
+  }
+  return result;
 }
 
 /**

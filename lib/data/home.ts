@@ -4,7 +4,12 @@
  * plus a `loadFailed` flag the page can surface, instead of throwing a 500.
  * Pure and node-testable: no React, no Next runtime.
  */
-import { availableStateOptions, globalStats, type GlobalStats } from './selectors';
+import {
+  availableStateOptions,
+  ciudadesByEstado as computeCiudadesByEstado,
+  globalStats,
+  type GlobalStats,
+} from './selectors';
 import type { DataStore } from './store';
 import type { LocationWithNeeds } from './types';
 
@@ -12,6 +17,7 @@ export interface HomeData {
   locations: LocationWithNeeds[];
   stats: GlobalStats;
   states: string[];
+  ciudadesByEstado: Record<string, string[]>;
   loadFailed: boolean;
 }
 
@@ -22,9 +28,16 @@ export async function loadHomeData(store: DataStore): Promise<HomeData> {
       locations,
       stats: globalStats(locations),
       states: availableStateOptions(locations),
+      ciudadesByEstado: computeCiudadesByEstado(locations),
       loadFailed: false,
     };
   } catch {
-    return { locations: [], stats: globalStats([]), states: [], loadFailed: true };
+    return {
+      locations: [],
+      stats: globalStats([]),
+      states: [],
+      ciudadesByEstado: {},
+      loadFailed: true,
+    };
   }
 }

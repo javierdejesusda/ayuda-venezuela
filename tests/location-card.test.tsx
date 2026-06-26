@@ -98,4 +98,68 @@ describe('LocationCard', () => {
     expect(container.querySelector('img')).toBeNull();
     expect(screen.queryByText(/\bfotos?\b/)).toBeNull();
   });
+
+  it('shows the personas_atrapadas caveat when value is "si"', () => {
+    const { container } = render(
+      <LocationCard location={makeLocation({ personas_atrapadas: 'si' })} />,
+    );
+    expect(container.textContent).toContain('Reporte ciudadano sin verificar');
+  });
+
+  it('does not show the caveat when personas_atrapadas is "no"', () => {
+    const { container } = render(
+      <LocationCard location={makeLocation({ personas_atrapadas: 'no' })} />,
+    );
+    expect(container.textContent).not.toContain('Reporte ciudadano sin verificar');
+  });
+
+  it('does not show the caveat when personas_atrapadas is absent (treated as no_se)', () => {
+    const { container } = render(
+      <LocationCard location={makeLocation({ personas_atrapadas: undefined })} />,
+    );
+    expect(container.textContent).not.toContain('Reporte ciudadano sin verificar');
+  });
+
+  it('has no seismic-pulse class on a dano_grave card', () => {
+    const { container } = render(
+      <LocationCard location={makeLocation({ status: 'dano_grave' })} />,
+    );
+    expect(container.querySelector('.live-ping')).toBeNull();
+  });
+
+  it('renders carousel controls when the zone has more than 1 photo', () => {
+    render(
+      <LocationCard
+        location={makeLocation({
+          fotos: [
+            'https://x.supabase.co/storage/v1/object/public/fotos/a.jpg',
+            'https://x.supabase.co/storage/v1/object/public/fotos/b.jpg',
+          ],
+        })}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Foto anterior' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Foto siguiente' })).toBeInTheDocument();
+  });
+
+  it('renders a single image with no carousel controls when the zone has 1 photo', () => {
+    render(
+      <LocationCard
+        location={makeLocation({
+          fotos: ['https://x.supabase.co/storage/v1/object/public/fotos/a.jpg'],
+        })}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'Foto anterior' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Foto siguiente' })).toBeNull();
+    expect(document.querySelectorAll('img')).toHaveLength(1);
+  });
+
+  it('details link navigates to /zona/[id]', () => {
+    render(<LocationCard location={makeLocation()} />);
+    expect(screen.getByRole('link', { name: /San Felipe centro/i })).toHaveAttribute(
+      'href',
+      '/zona/loc_1',
+    );
+  });
 });

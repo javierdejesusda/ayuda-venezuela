@@ -17,9 +17,9 @@ describe('mapDamageToStatus', () => {
     expect(mapDamageToStatus('total')).toBe('derrumbe');
   });
 
-  it('maps severe and partial damage to danado', () => {
-    expect(mapDamageToStatus('severo')).toBe('danado');
-    expect(mapDamageToStatus('parcial')).toBe('danado');
+  it('maps severe damage to dano_grave and partial damage to dano_parcial', () => {
+    expect(mapDamageToStatus('severo')).toBe('dano_grave');
+    expect(mapDamageToStatus('parcial')).toBe('dano_parcial');
   });
 
   it('falls back to desconocido for empty or unknown levels', () => {
@@ -273,7 +273,7 @@ describe('transformBuilding', () => {
     expect(out.location.estado).toBe('Distrito Capital');
     expect(out.location.ciudad).toBe('Caracas');
     expect(out.location.zona).toBe('San jose');
-    expect(out.location.status).toBe('danado');
+    expect(out.location.status).toBe('dano_grave');
     expect(out.location.lat).toBeNull();
     expect(out.location.lng).toBeNull();
   });

@@ -6,14 +6,34 @@
  * validation schemas (see `schemas.ts`).
  */
 
-/** Structural condition reported for an emergency zone. */
+/** Structural condition reported for an emergency zone (ordered most-to-least critical). */
 export const EMERGENCY_STATUSES = [
-  'derrumbe', // building(s) collapsed - people may be trapped
-  'danado', // damaged but standing - risk present
-  'estable', // structurally stable / safe to approach
-  'desconocido', // not yet confirmed
+  'derrumbe',    // rank 0: building(s) collapsed - people may be trapped
+  'dano_grave',  // rank 1: severe structural damage - imminent risk
+  'dano_parcial', // rank 2: partial damage - risk present (replaces legacy 'danado')
+  'desconocido', // rank 3: not yet confirmed
+  'estable',     // rank 4: structurally stable / safe to approach
 ] as const;
 export type EmergencyStatus = (typeof EMERGENCY_STATUSES)[number];
+
+/** Whether trapped persons are reported at this zone. */
+export const PERSONAS_ATRAPADAS = ['si', 'no', 'no_se'] as const;
+export type PersonasAtrapadas = (typeof PERSONAS_ATRAPADAS)[number];
+/** Default value when no information is available about trapped persons. */
+export const PERSONAS_ATRAPADAS_DEFAULT: PersonasAtrapadas = 'no_se';
+
+/** Source channel for a zone report. */
+export const FUENTE_REPORTE = ['vecino', 'video', 'noticia', 'organismo', 'otro'] as const;
+export type FuenteReporte = (typeof FUENTE_REPORTE)[number];
+
+/** Human-readable es_VE labels for each fuente_reporte value. */
+export const FUENTE_REPORTE_LABELS: Record<FuenteReporte, string> = {
+  vecino: 'Vecino',
+  video: 'Video',
+  noticia: 'Noticia',
+  organismo: 'Organismo oficial',
+  otro: 'Otro',
+};
 
 /** How urgent a specific need is. */
 export const URGENCIES = ['alta', 'media', 'baja'] as const;
@@ -85,6 +105,12 @@ export interface LocationRecord {
   /** Saved coordinate uncertainty radius in meters; null means exact. */
   accuracyM?: number | null;
   status: EmergencyStatus;
+  /** Whether trapped persons are reported; absent/null treated as 'no_se' by consumers. */
+  personas_atrapadas?: PersonasAtrapadas;
+  /** Source channel for this report; null when not specified. */
+  fuente_reporte?: FuenteReporte | null;
+  /** Construction type of the affected structure; null when not specified. */
+  tipo_construccion?: string | null;
   descripcion?: string;
   contactoNombre?: string;
   contactoTelefono?: string;
@@ -130,14 +156,23 @@ export interface CreateLocationInput {
   lng?: number | null;
   accuracyM?: number | null;
   status: EmergencyStatus;
+  personas_atrapadas?: PersonasAtrapadas;
+  fuente_reporte?: FuenteReporte | null;
+  tipo_construccion?: string | null;
   descripcion?: string;
   contactoNombre?: string;
   contactoTelefono?: string;
   fotos?: string[];
 }
 
+/** Maximum reports allowed per key within the quota sliding window. */
+export const REPORT_QUOTA_LIMIT = 20;
+
+/** Sliding window duration for the per-key report quota, in milliseconds (10 minutes). */
+export const REPORT_QUOTA_WINDOW_MS = 10 * 60 * 1000;
+
 /** Maximum number of photos a single zone report may attach. */
-export const MAX_FOTOS = 4;
+export const MAX_FOTOS = 8;
 
 /** Maximum size of a single uploaded photo, in megabytes (used in UI copy). */
 export const MAX_FOTO_MB = 10;
@@ -159,11 +194,16 @@ export interface CreateNeedInput {
 /** Filters applied to the zone list/map on the home screen. */
 export interface LocationFilters {
   estado?: string;
+  /** Ciudad filter (applied in a later release; param plumbing available now). */
+  ciudad?: string;
   status?: EmergencyStatus;
   categoria?: NeedCategory;
   soloUrgentes?: boolean;
   texto?: string;
 }
+
+/** Default number of locations per page for the bounded home list. */
+export const PAGE_SIZE = 20;
 
 /** Category of an emergency phone contact (matches research output). */
 export const CONTACT_CATEGORIES = [
@@ -212,6 +252,56 @@ export interface CreateFundraiserInput {
   descripcion: string;
   url: string;
   organizador?: string;
+}
+
+// Zone clustering (secret infrastructure; see 20260630000000_zone_clustering.sql).
+
+/** A canonical cluster grouping co-located zone reports. */
+export interface ZoneCluster {
+  id: string;
+  canonicalLocationId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Membership record linking a location to its cluster. */
+export interface ZoneClusterMember {
+  clusterId: string;
+  locationId: string;
+}
+
+/** Discriminated union of auditable events within a cluster. */
+export type ZoneUpdateKind = 'report_added' | 'status_changed' | 'merged_duplicate';
+
+/** Audit event stored on the cluster when its members or status changes. */
+export interface ZoneUpdate {
+  id: string;
+  clusterId: string;
+  kind: ZoneUpdateKind;
+  note: string | null;
+  createdAt: string;
+}
+
+/** Flattened timeline entry used in the canonical cluster view. */
+export interface TimelineEntry {
+  id: string;
+  kind: ZoneUpdateKind;
+  note: string | null;
+  createdAt: string;
+}
+
+/**
+ * Canonical view of a cluster, aggregated from the cluster's members.
+ * NOTE: no 'verificado' field - the app never claims verification.
+ */
+export interface ClusterCanonicalView {
+  canonicalLocationId: string;
+  status: EmergencyStatus;
+  personas_atrapadas: PersonasAtrapadas;
+  fotos: string[];
+  updatedAt: string;
+  memberCount: number;
+  timeline: TimelineEntry[];
 }
 
 /** Generic resource entry (aid orgs, shelters, supply guidance, national lines). */

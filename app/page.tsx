@@ -1,8 +1,10 @@
 import { HomeExplorer } from '@/components/home-explorer';
 import { HomeHero } from '@/components/home-hero';
 import { MissingPersonsLink } from '@/components/missing-persons-link';
+import { SharePanel } from '@/components/share-panel';
 import { loadHomeData } from '@/lib/data/home';
-import { getStore } from '@/lib/data/store';
+import { stripContactPii } from '@/lib/data/selectors';
+import { getStore, PAGE_SIZE } from '@/lib/data/store';
 
 // ISR with 30-second revalidation. In-app writes call revalidatePath('/')
 // via app/actions.ts for instant on-demand revalidation. Out-of-band changes
@@ -11,13 +13,24 @@ import { getStore } from '@/lib/data/store';
 export const revalidate = 30;
 
 export default async function HomePage() {
-  const { locations, stats, states, loadFailed } = await loadHomeData(getStore());
+  const { locations, stats, states, ciudadesByEstado, loadFailed } = await loadHomeData(
+    getStore(),
+  );
+
+  // Embed the full server-loaded set for the map (no per-visitor fetch) and a
+  // bounded first page for the list, both with reporter contact PII stripped
+  // since neither surface displays it. listLocations() returns the sorted set.
+  const mapLocations = locations.map(stripContactPii);
+  const initialLocations = mapLocations.slice(0, PAGE_SIZE);
+  const initialTotal = mapLocations.length;
 
   return (
     <div className="space-y-6">
       <HomeHero stats={stats} />
 
       <MissingPersonsLink variant="card" />
+
+      <SharePanel kind="home" />
 
       {loadFailed && (
         <p
@@ -29,7 +42,13 @@ export default async function HomePage() {
         </p>
       )}
 
-      <HomeExplorer locations={locations} states={states} />
+      <HomeExplorer
+        initialLocations={initialLocations}
+        initialMapLocations={mapLocations}
+        initialTotal={initialTotal}
+        states={states}
+        ciudadesByEstado={ciudadesByEstado}
+      />
     </div>
   );
 }

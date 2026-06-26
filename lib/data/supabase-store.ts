@@ -7,18 +7,25 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import { DuplicateFundraiserError } from './fundraiser-url';
 import { applyFilters, sortLocations, withSummary } from './selectors';
+import { deriveCanonicalView } from './zone-cluster';
+import { PERSONAS_ATRAPADAS_DEFAULT } from './types';
 import type {
+  ClusterCanonicalView,
   CreateFundraiserInput,
   CreateLocationInput,
   CreateNeedInput,
   EmergencyStatus,
+  FuenteReporte,
   Fundraiser,
   LocationFilters,
   LocationRecord,
   NeedCategory,
   NeedRecord,
   NeedStatus,
+  PersonasAtrapadas,
   Urgency,
+  ZoneUpdate,
+  ZoneUpdateKind,
 } from './types';
 import type { DataStore } from './store';
 
@@ -35,6 +42,11 @@ interface LocationRow {
   lng: number | null;
   // Optional so older row fixtures (pre-migration) still satisfy this type.
   accuracy_m?: number | null;
+  // Optional so rows from databases without the severity migration still work.
+  personas_atrapadas?: string | null;
+  // Optional so rows from databases without the report-metadata migration still work.
+  fuente_reporte?: string | null;
+  tipo_construccion?: string | null;
   status: string;
   descripcion: string | null;
   contacto_nombre: string | null;
@@ -66,6 +78,15 @@ interface FundraiserRow {
   updated_at: string;
 }
 
+/** Snake-case row returned by the get_cluster_for_location RPC. */
+interface RpcUpdateRow {
+  id: string;
+  cluster_id: string;
+  kind: string;
+  note: string | null;
+  created_at: string;
+}
+
 function toFundraiser(r: FundraiserRow): Fundraiser {
   return {
     id: r.id,
@@ -89,6 +110,9 @@ export function toLocation(r: LocationRow): LocationRecord {
     lng: r.lng,
     accuracyM: r.accuracy_m ?? null,
     status: r.status as EmergencyStatus,
+    personas_atrapadas: (r.personas_atrapadas as PersonasAtrapadas) ?? PERSONAS_ATRAPADAS_DEFAULT,
+    fuente_reporte: (r.fuente_reporte as FuenteReporte) ?? null,
+    tipo_construccion: r.tipo_construccion ?? null,
     descripcion: r.descripcion ?? undefined,
     contactoNombre: r.contacto_nombre ?? undefined,
     contactoTelefono: r.contacto_telefono ?? undefined,
@@ -113,12 +137,21 @@ function toNeed(r: NeedRow): NeedRecord {
 }
 
 /**
- * True when an insert failed only because the `accuracy_m` column is absent
- * (the accuracy migration has not been applied to this database yet).
+ * Returns the column name when an insert failed because that column is absent
+ * from the table. Returns null for any other error type.
+ *
+ * Handles both Postgres 42703 ("column X of relation Y does not exist") and
+ * PostgREST schema-cache misses ("Could not find the column X"). Used to
+ * detect databases that have not yet had a particular migration applied.
  */
-function isMissingAccuracyColumn(error: unknown): boolean {
+function missingColumnName(error: unknown): string | null {
   const message = (error as { message?: string } | null)?.message ?? '';
-  return /accuracy_m/i.test(message);
+  // Postgres: column "name" of relation "table" does not exist
+  let m = message.match(/column "(\w+)" of relation .+ does not exist/i);
+  if (m) return m[1];
+  // PostgREST schema cache miss
+  m = message.match(/could not find the column "(\w+)"/i);
+  return m?.[1] ?? null;
 }
 
 export function createSupabaseStore(url: string, key: string): DataStore {
@@ -152,6 +185,22 @@ export function createSupabaseStore(url: string, key: string): DataStore {
       return sortLocations(applyFilters(composed, filters));
     },
 
+    async listLocationsPage(filters: LocationFilters, offset: number, limit: number) {
+      // Embed needs in a single round-trip, then apply shared selectors in
+      // memory. Full server-side predicate push for every filter field is
+      // deferred to a future optimization; the in-memory approach keeps
+      // the needs composition logic in one place.
+      const { data, error } = await client
+        .from('locations')
+        .select('*, needs(*)')
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      const filtered = sortLocations(
+        applyFilters(((data as LocationWithNeedsRow[] | null) ?? []).map(composeLocation), filters),
+      );
+      return { items: filtered.slice(offset, offset + limit), total: filtered.length };
+    },
+
     async getLocation(id: string) {
       const { data, error } = await client
         .from('locations')
@@ -164,7 +213,10 @@ export function createSupabaseStore(url: string, key: string): DataStore {
     },
 
     async createLocation(input: CreateLocationInput) {
-      const row = {
+      // Build the full insert payload with all optional columns. The retry loop
+      // below strips any column the database does not yet have (un-migrated DB),
+      // so reports are never silently lost due to a missing migration.
+      let payload: Record<string, unknown> = {
         nombre: input.nombre,
         estado: input.estado,
         ciudad: input.ciudad,
@@ -176,26 +228,35 @@ export function createSupabaseStore(url: string, key: string): DataStore {
         contacto_nombre: input.contactoNombre ?? null,
         contacto_telefono: input.contactoTelefono ?? null,
         fotos: input.fotos ?? [],
+        accuracy_m: input.accuracyM ?? null,
+        personas_atrapadas: input.personas_atrapadas ?? PERSONAS_ATRAPADAS_DEFAULT,
+        fuente_reporte: input.fuente_reporte ?? null,
+        tipo_construccion: input.tipo_construccion ?? null,
       };
 
-      let { data, error } = await client
-        .from('locations')
-        .insert({ ...row, accuracy_m: input.accuracyM ?? null })
-        .select('*')
-        .single();
-
-      // Databases that have not run the accuracy_m migration yet reject that
-      // column; retry without it so reports still save instead of failing.
-      if (error && isMissingAccuracyColumn(error)) {
-        ({ data, error } = await client
+      // Retry: if the insert fails because an optional column is absent from the
+      // database, remove that column and try again. Loops until success or a
+      // non-missing-column error, cleanly handling any combination of pending
+      // migrations without hardcoding column names.
+      for (;;) {
+        const { data, error } = await client
           .from('locations')
-          .insert(row)
+          .insert(payload)
           .select('*')
-          .single());
-      }
+          .single();
 
-      if (error) throw error;
-      return toLocation(data as LocationRow);
+        if (!error) return toLocation(data as LocationRow);
+
+        const col = missingColumnName(error);
+        if (col && col in payload) {
+          const next = { ...payload };
+          delete next[col];
+          payload = next;
+          continue;
+        }
+
+        throw error;
+      }
     },
 
     async updateLocationStatus(id: string, status: EmergencyStatus) {
@@ -266,6 +327,52 @@ export function createSupabaseStore(url: string, key: string): DataStore {
         throw error;
       }
       return toFundraiser(data as FundraiserRow);
+    },
+
+    async checkReportQuota(keyHash: string) {
+      // FAIL-OPEN: any infrastructure error allows the report through so a
+      // legitimate emergency submission is never blocked by a throttle-table
+      // outage or a database that has not yet had the migration applied.
+      try {
+        const { data, error } = await client.rpc('check_report_quota', {
+          p_key_hash: keyHash,
+        });
+        if (error) return true;
+        return data !== false;
+      } catch {
+        return true;
+      }
+    },
+
+    async getClusterForLocation(locationId: string): Promise<ClusterCanonicalView | null> {
+      // FAIL-OPEN: any RPC error (missing migration, permissions, network)
+      // returns null so the zona page degrades to single-report display rather
+      // than breaking with a 500. The cluster tables are RLS-locked; direct
+      // table access from the anon client is intentionally blocked. The
+      // SECURITY DEFINER RPC in 20260630010000_cluster_read_rpc.sql is the
+      // only sanctioned read path.
+      try {
+        const { data, error } = await client.rpc('get_cluster_for_location', {
+          loc_id: locationId,
+        });
+        if (error || !data) return null;
+
+        const raw = data as { members: LocationRow[]; updates: RpcUpdateRow[] };
+        if (!raw.members || raw.members.length === 0) return null;
+
+        const members: LocationRecord[] = raw.members.map(toLocation);
+        const updates: ZoneUpdate[] = (raw.updates ?? []).map((u) => ({
+          id: u.id,
+          clusterId: u.cluster_id,
+          kind: u.kind as ZoneUpdateKind,
+          note: u.note,
+          createdAt: u.created_at,
+        }));
+
+        return deriveCanonicalView(members, updates);
+      } catch {
+        return null;
+      }
     },
   };
 }

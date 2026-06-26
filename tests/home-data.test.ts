@@ -12,7 +12,7 @@ function loc(over: Partial<LocationWithNeeds> = {}): LocationWithNeeds {
     ciudad: 'Valencia',
     lat: null,
     lng: null,
-    status: 'danado',
+    status: 'dano_parcial',
     fotos: [],
     createdAt: '2026-06-25T00:00:00Z',
     updatedAt: '2026-06-25T00:00:00Z',
@@ -26,6 +26,10 @@ function stubStore(listLocations: () => Promise<LocationWithNeeds[]>): DataStore
   return {
     isDemo: false,
     listLocations,
+    listLocationsPage: async (_, offset, limit) => {
+      const all = await listLocations();
+      return { items: all.slice(offset, offset + limit), total: all.length };
+    },
     getLocation: async () => null,
     createLocation: async () => {
       throw new Error('not implemented');
@@ -39,6 +43,8 @@ function stubStore(listLocations: () => Promise<LocationWithNeeds[]>): DataStore
     createFundraiser: async () => {
       throw new Error('not implemented');
     },
+    checkReportQuota: async () => true,
+    getClusterForLocation: async () => null,
   };
 }
 
@@ -61,6 +67,62 @@ describe('loadHomeData', () => {
       [...data.states].sort((a, b) => a.localeCompare(b, 'es')),
     );
     expect(data.stats.zonas).toBe(3);
+    expect(data.ciudadesByEstado).toBeDefined();
+  });
+
+  it('returns non-zero danoGrave and danoParcial when mixed severities are present', async () => {
+    const store = stubStore(async () => [
+      loc({ id: 'a', status: 'derrumbe' }),
+      loc({ id: 'b', status: 'dano_grave' }),
+      loc({ id: 'c', status: 'dano_grave' }),
+      loc({ id: 'd', status: 'dano_parcial' }),
+      loc({ id: 'e', status: 'estable' }),
+    ]);
+
+    const data = await loadHomeData(store);
+
+    expect(data.stats.danoGrave).toBe(2);
+    expect(data.stats.danoParcial).toBe(1);
+    expect(data.stats.derrumbes).toBe(1);
+  });
+
+  it('stats sum equals total locations across severity buckets', async () => {
+    const store = stubStore(async () => [
+      loc({ id: 'a', status: 'derrumbe' }),
+      loc({ id: 'b', status: 'dano_grave' }),
+      loc({ id: 'c', status: 'dano_parcial' }),
+      loc({ id: 'd', status: 'desconocido' }),
+      loc({ id: 'e', status: 'estable' }),
+    ]);
+
+    const data = await loadHomeData(store);
+
+    expect(data.stats.zonas).toBe(5);
+    // derrumbes + danoGrave + danoParcial = 3 (the 3 non-stable non-unknown zones)
+    expect(data.stats.derrumbes + data.stats.danoGrave + data.stats.danoParcial).toBe(3);
+  });
+
+  it('returns ciudadesByEstado grouped by estado', async () => {
+    const store = stubStore(async () => [
+      loc({ id: 'a', estado: 'Carabobo', ciudad: 'Valencia' }),
+      loc({ id: 'b', estado: 'Carabobo', ciudad: 'Guacara' }),
+      loc({ id: 'c', estado: 'Aragua', ciudad: 'Maracay' }),
+    ]);
+
+    const data = await loadHomeData(store);
+
+    expect(data.ciudadesByEstado['Carabobo']).toEqual(['Guacara', 'Valencia']);
+    expect(data.ciudadesByEstado['Aragua']).toEqual(['Maracay']);
+  });
+
+  it('ciudadesByEstado defaults to an empty object on load failure', async () => {
+    const store = stubStore(async () => {
+      throw new Error('fetch failed');
+    });
+
+    const data = await loadHomeData(store);
+
+    expect(data.ciudadesByEstado).toEqual({});
   });
 
   it('degrades to an empty list and loadFailed when listLocations rejects', async () => {

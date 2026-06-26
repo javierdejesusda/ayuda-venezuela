@@ -12,7 +12,7 @@ function zone(): LocationWithNeeds {
     ciudad: 'Valencia',
     lat: null,
     lng: null,
-    status: 'danado',
+    status: 'dano_parcial',
     fotos: [],
     createdAt: '2026-06-25T00:00:00Z',
     updatedAt: '2026-06-25T00:00:00Z',
@@ -25,6 +25,7 @@ function stubStore(getLocation: DataStore['getLocation']): DataStore {
   return {
     isDemo: false,
     listLocations: async () => [],
+    listLocationsPage: async () => ({ items: [], total: 0 }),
     getLocation,
     createLocation: async () => {
       throw new Error('not implemented');
@@ -38,6 +39,8 @@ function stubStore(getLocation: DataStore['getLocation']): DataStore {
     createFundraiser: async () => {
       throw new Error('not implemented');
     },
+    checkReportQuota: async () => true,
+    getClusterForLocation: async () => null,
   };
 }
 

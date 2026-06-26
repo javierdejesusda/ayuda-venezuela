@@ -12,6 +12,11 @@ import { createId } from '@/lib/utils';
 import { DuplicateFundraiserError } from './fundraiser-url';
 import { applyFilters, sortLocations, withSummary } from './selectors';
 import { SEED } from './seed';
+import {
+  PERSONAS_ATRAPADAS_DEFAULT,
+  REPORT_QUOTA_LIMIT,
+  REPORT_QUOTA_WINDOW_MS,
+} from './types';
 import type {
   CreateFundraiserInput,
   CreateLocationInput,
@@ -40,6 +45,8 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
   const fundraisers: Fundraiser[] = initial
     ? [...(initial.fundraisers ?? [])]
     : [...SEED.fundraisers];
+  // Tracks report submission timestamps (ms) per hashed key for rate limiting.
+  const quotaHits = new Map<string, number[]>();
 
   const compose = (): LocationWithNeeds[] =>
     locations.map((l) => withSummary(l, needs));
@@ -51,6 +58,11 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
 
     async listLocations(filters?: LocationFilters) {
       return sortLocations(applyFilters(compose(), filters));
+    },
+
+    async listLocationsPage(filters: LocationFilters, offset: number, limit: number) {
+      const filtered = sortLocations(applyFilters(compose(), filters));
+      return { items: filtered.slice(offset, offset + limit), total: filtered.length };
     },
 
     async getLocation(id: string) {
@@ -70,6 +82,9 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
         lng: input.lng ?? null,
         accuracyM: input.accuracyM ?? null,
         status: input.status,
+        personas_atrapadas: input.personas_atrapadas ?? PERSONAS_ATRAPADAS_DEFAULT,
+        fuente_reporte: input.fuente_reporte ?? null,
+        tipo_construccion: input.tipo_construccion ?? null,
         descripcion: input.descripcion,
         contactoNombre: input.contactoNombre,
         contactoTelefono: input.contactoTelefono,
@@ -138,6 +153,25 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
       };
       fundraisers.unshift(record);
       return record;
+    },
+
+    async checkReportQuota(keyHash: string) {
+      const cutoff = Date.now() - REPORT_QUOTA_WINDOW_MS;
+      const hits = (quotaHits.get(keyHash) ?? []).filter((t) => t > cutoff);
+      if (hits.length >= REPORT_QUOTA_LIMIT) {
+        quotaHits.set(keyHash, hits);
+        return false;
+      }
+      hits.push(Date.now());
+      quotaHits.set(keyHash, hits);
+      return true;
+    },
+
+    // No clustering in demo/memory mode: the zone_clusters tables exist only in
+    // the real Supabase database. Returning null causes the zona page to fall
+    // back to single-report display, which is the correct demo behaviour.
+    async getClusterForLocation() {
+      return null;
     },
   };
 }

@@ -42,7 +42,7 @@ import type {
   Urgency,
 } from './data/types';
 
-export type Tone = 'danger' | 'warning' | 'success' | 'neutral' | 'brand';
+export type Tone = 'danger' | 'warning' | 'success' | 'neutral' | 'brand' | 'severe';
 
 export interface Meta {
   label: string;
@@ -94,6 +94,14 @@ export function toneClasses(tone: Tone): ToneClasses {
         dot: 'bg-brand-600',
         solid: 'bg-brand-600 text-white',
       };
+    case 'severe':
+      return {
+        text: 'text-tone-severe-text',
+        bg: 'bg-severe/10',
+        border: 'border-severe/25',
+        dot: 'bg-severe',
+        solid: 'bg-severe text-white',
+      };
     default:
       return {
         text: 'text-ink-soft',
@@ -112,6 +120,7 @@ export const TONE_HEX: Record<Tone, string> = {
   success: '#2e9e5b',
   brand: '#1f47df',
   neutral: '#868d9b',
+  severe: '#c2410c',
 };
 
 export const statusMeta: Record<EmergencyStatus, Meta> = {
@@ -121,17 +130,17 @@ export const statusMeta: Record<EmergencyStatus, Meta> = {
     tone: 'danger',
     icon: Building2,
   },
-  danado: {
-    label: 'Dañado',
-    description: 'Estructuras dañadas o con riesgo. Acercarse con precaución.',
-    tone: 'warning',
+  dano_grave: {
+    label: 'Daño grave',
+    description: 'Daños estructurales graves. Riesgo inminente de colapso.',
+    tone: 'severe',
     icon: TriangleAlert,
   },
-  estable: {
-    label: 'Estable',
-    description: 'Sin colapso reportado. Zona estructuralmente estable.',
-    tone: 'success',
-    icon: ShieldCheck,
+  dano_parcial: {
+    label: 'Daño parcial',
+    description: 'Estructuras con daño parcial. Acercarse con precaución.',
+    tone: 'warning',
+    icon: TriangleAlert,
   },
   desconocido: {
     label: 'Sin confirmar',
@@ -139,7 +148,23 @@ export const statusMeta: Record<EmergencyStatus, Meta> = {
     tone: 'neutral',
     icon: CircleHelp,
   },
+  estable: {
+    label: 'Estable',
+    description: 'Sin colapso reportado. Zona estructuralmente estable.',
+    tone: 'success',
+    icon: ShieldCheck,
+  },
 };
+
+/**
+ * statusMeta lookup that survives an unknown or legacy status value. A row
+ * written before the severity migration can still carry 'danado', which is no
+ * longer a statusMeta key; rendering `statusMeta[status].tone` directly would
+ * throw on the undefined. Falls back to the neutral 'desconocido' meta instead.
+ */
+export function resolveStatusMeta(status: EmergencyStatus): Meta {
+  return statusMeta[status] ?? statusMeta.desconocido;
+}
 
 export const urgencyMeta: Record<Urgency, Meta> = {
   alta: { label: 'Urgente', tone: 'danger', icon: TriangleAlert },

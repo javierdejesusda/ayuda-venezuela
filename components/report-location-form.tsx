@@ -21,8 +21,12 @@ import { getBrowserSupabase } from '@/lib/data/supabase-browser';
 import { validateFotoFile } from '@/lib/data/foto-validation';
 import {
   EMERGENCY_STATUSES,
+  FUENTE_REPORTE,
+  FUENTE_REPORTE_LABELS,
   MAX_FOTO_MB,
   MAX_FOTOS,
+  PERSONAS_ATRAPADAS,
+  PERSONAS_ATRAPADAS_DEFAULT,
   VENEZUELA_STATES,
 } from '@/lib/data/types';
 import { APPROXIMATE_THRESHOLD_M } from '@/lib/geocoding/types';
@@ -76,6 +80,9 @@ interface FormValues {
   ciudad: string;
   zona: string;
   status: string;
+  personas_atrapadas: string;
+  fuente_reporte: string;
+  tipo_construccion: string;
   descripcion: string;
   contactoNombre: string;
   contactoTelefono: string;
@@ -101,9 +108,18 @@ const INITIAL_VALUES: FormValues = {
   ciudad: '',
   zona: '',
   status: 'desconocido',
+  personas_atrapadas: PERSONAS_ATRAPADAS_DEFAULT,
+  fuente_reporte: '',
+  tipo_construccion: '',
   descripcion: '',
   contactoNombre: '',
   contactoTelefono: '',
+};
+
+const PERSONAS_ATRAPADAS_LABELS: Record<string, string> = {
+  si: 'Sí',
+  no: 'No',
+  no_se: 'No se sabe',
 };
 
 export default function ReportLocationForm(): React.JSX.Element {
@@ -274,6 +290,9 @@ export default function ReportLocationForm(): React.JSX.Element {
         ciudad: values.ciudad.trim(),
         zona: values.zona.trim() || undefined,
         status: values.status,
+        personas_atrapadas: values.personas_atrapadas,
+        fuente_reporte: values.fuente_reporte || undefined,
+        tipo_construccion: values.tipo_construccion.trim() || undefined,
         descripcion: values.descripcion.trim() || undefined,
         contactoNombre: values.contactoNombre.trim() || undefined,
         contactoTelefono: values.contactoTelefono.trim() || undefined,
@@ -470,6 +489,72 @@ export default function ReportLocationForm(): React.JSX.Element {
             </option>
           ))}
         </Select>
+      </Field>
+
+      {/* Personas atrapadas */}
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-ink">Personas atrapadas</legend>
+        <p className="text-xs text-ink-faint">
+          Indica si hay personas atrapadas según el reporte. Esta información no es verificada.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          {PERSONAS_ATRAPADAS.map((val) => (
+              <label
+                key={val}
+                className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink-soft"
+              >
+                <input
+                  type="radio"
+                  name="personas_atrapadas"
+                  value={val}
+                  checked={values.personas_atrapadas === val}
+                  onChange={handleChange}
+                  disabled={isPending}
+                  className="accent-brand-600"
+                />
+                {PERSONAS_ATRAPADAS_LABELS[val]}
+              </label>
+            ))}
+        </div>
+      </fieldset>
+
+      {/* Fuente del reporte (opcional) */}
+      <Field
+        label="Fuente del reporte"
+        htmlFor="fuente_reporte"
+        hint="Opcional. ¿Cómo se supo de esta situación?"
+      >
+        <Select
+          id="fuente_reporte"
+          name="fuente_reporte"
+          value={values.fuente_reporte}
+          onChange={handleChange}
+          disabled={isPending}
+        >
+          <option value="">Selecciona una fuente</option>
+          {FUENTE_REPORTE.map((val) => (
+            <option key={val} value={val}>
+              {FUENTE_REPORTE_LABELS[val]}
+            </option>
+          ))}
+        </Select>
+      </Field>
+
+      {/* Tipo de construcción (opcional) */}
+      <Field
+        label="Tipo de construcción"
+        htmlFor="tipo_construccion"
+        hint="Opcional. Indica el tipo de estructura afectada."
+      >
+        <Input
+          id="tipo_construccion"
+          name="tipo_construccion"
+          value={values.tipo_construccion}
+          onChange={handleChange}
+          placeholder="Ej: edificio de concreto, casa"
+          maxLength={200}
+          disabled={isPending}
+        />
       </Field>
 
       {/* Descripcion (opcional) */}

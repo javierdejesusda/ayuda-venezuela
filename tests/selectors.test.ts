@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  STATUS_RANK,
   applyFilters,
   buildSummary,
+  globalStats,
   sortLocations,
   withSummary,
 } from '@/lib/data/selectors';
-import type { LocationRecord, NeedRecord } from '@/lib/data/types';
+import type { LocationRecord, LocationWithNeeds, NeedRecord } from '@/lib/data/types';
 
 const baseLocation = (over: Partial<LocationRecord>): LocationRecord => ({
   id: 'l1',
@@ -15,7 +17,7 @@ const baseLocation = (over: Partial<LocationRecord>): LocationRecord => ({
   ciudad: 'Valencia',
   lat: 10,
   lng: -68,
-  status: 'danado',
+  status: 'dano_parcial',
   createdAt: '2026-06-24T22:10:00Z',
   updatedAt: '2026-06-24T22:10:00Z',
   ...over,
@@ -86,6 +88,35 @@ describe('applyFilters', () => {
   });
 });
 
+describe('STATUS_RANK', () => {
+  it('assigns rank 0 to derrumbe (most critical)', () => {
+    expect(STATUS_RANK['derrumbe']).toBe(0);
+  });
+
+  it('assigns rank 1 to dano_grave', () => {
+    expect(STATUS_RANK['dano_grave']).toBe(1);
+  });
+
+  it('assigns rank 2 to dano_parcial', () => {
+    expect(STATUS_RANK['dano_parcial']).toBe(2);
+  });
+
+  it('assigns rank 3 to desconocido', () => {
+    expect(STATUS_RANK['desconocido']).toBe(3);
+  });
+
+  it('assigns rank 4 to estable (least critical)', () => {
+    expect(STATUS_RANK['estable']).toBe(4);
+  });
+
+  it('has strictly increasing ranks: derrumbe < dano_grave < dano_parcial < desconocido < estable', () => {
+    expect(STATUS_RANK['derrumbe']).toBeLessThan(STATUS_RANK['dano_grave']);
+    expect(STATUS_RANK['dano_grave']).toBeLessThan(STATUS_RANK['dano_parcial']);
+    expect(STATUS_RANK['dano_parcial']).toBeLessThan(STATUS_RANK['desconocido']);
+    expect(STATUS_RANK['desconocido']).toBeLessThan(STATUS_RANK['estable']);
+  });
+});
+
 describe('sortLocations', () => {
   it('puts collapse + urgent zones before stable ones', () => {
     const stable = withSummary(baseLocation({ id: 'stable', status: 'estable' }), []);
@@ -94,5 +125,49 @@ describe('sortLocations', () => {
     ]);
     const sorted = sortLocations([stable, collapse]);
     expect(sorted[0].id).toBe('collapse');
+  });
+
+  it('sorts derrumbe before dano_grave before dano_parcial before desconocido before estable', () => {
+    const locs: LocationWithNeeds[] = [
+      withSummary(baseLocation({ id: 'e', status: 'estable' }), []),
+      withSummary(baseLocation({ id: 'd', status: 'desconocido' }), []),
+      withSummary(baseLocation({ id: 'dp', status: 'dano_parcial' }), []),
+      withSummary(baseLocation({ id: 'dg', status: 'dano_grave' }), []),
+      withSummary(baseLocation({ id: 'r', status: 'derrumbe' }), []),
+    ];
+    const sorted = sortLocations(locs);
+    expect(sorted.map((l) => l.id)).toEqual(['r', 'dg', 'dp', 'd', 'e']);
+  });
+});
+
+describe('globalStats', () => {
+  it('returns danoGrave and danoParcial counts alongside derrumbes', () => {
+    const locs: LocationWithNeeds[] = [
+      withSummary(baseLocation({ id: '1', status: 'derrumbe' }), []),
+      withSummary(baseLocation({ id: '2', status: 'dano_grave' }), []),
+      withSummary(baseLocation({ id: '3', status: 'dano_grave' }), []),
+      withSummary(baseLocation({ id: '4', status: 'dano_parcial' }), []),
+      withSummary(baseLocation({ id: '5', status: 'estable' }), []),
+    ];
+    const stats = globalStats(locs);
+    expect(stats.zonas).toBe(5);
+    expect(stats.derrumbes).toBe(1);
+    expect(stats.danoGrave).toBe(2);
+    expect(stats.danoParcial).toBe(1);
+  });
+
+  it('per-severity counts sum to total zones when all zones have a severity', () => {
+    const locs: LocationWithNeeds[] = [
+      withSummary(baseLocation({ id: '1', status: 'derrumbe' }), []),
+      withSummary(baseLocation({ id: '2', status: 'dano_grave' }), []),
+      withSummary(baseLocation({ id: '3', status: 'dano_parcial' }), []),
+      withSummary(baseLocation({ id: '4', status: 'desconocido' }), []),
+      withSummary(baseLocation({ id: '5', status: 'estable' }), []),
+    ];
+    const stats = globalStats(locs);
+    const sum = stats.derrumbes + stats.danoGrave + stats.danoParcial;
+    // derrumbes + danoGrave + danoParcial accounts for all non-estable non-desconocido
+    expect(sum).toBe(3);
+    expect(stats.zonas).toBe(5);
   });
 });
