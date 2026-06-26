@@ -146,6 +146,12 @@ export interface CreateLocationInput {
   fotos?: string[];
 }
 
+/** Maximum reports allowed per key within the quota sliding window. */
+export const REPORT_QUOTA_LIMIT = 20;
+
+/** Sliding window duration for the per-key report quota, in milliseconds (10 minutes). */
+export const REPORT_QUOTA_WINDOW_MS = 10 * 60 * 1000;
+
 /** Maximum number of photos a single zone report may attach. */
 export const MAX_FOTOS = 4;
 

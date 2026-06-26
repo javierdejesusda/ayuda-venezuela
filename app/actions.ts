@@ -1,5 +1,8 @@
 'use server';
 
+import { createHash } from 'node:crypto';
+
+import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import type { z } from 'zod';
 
@@ -37,6 +40,30 @@ export async function createLocationAction(
       fieldErrors: fieldErrors(parsed.error),
     };
   }
+
+  // Rate-limit check: hash the caller IP with a server-side salt so no raw IP
+  // is ever stored. Requires BOTH a non-empty IP and a non-empty THROTTLE_SALT;
+  // either missing means the gate is skipped (fail-open) so no unsalted hash
+  // is persisted and legitimate reporters are never blocked on misconfiguration.
+  try {
+    const h = await headers();
+    const fwd = h.get('x-forwarded-for') ?? '';
+    const ip = fwd.split(',')[0]?.trim() ?? '';
+    const salt = process.env.THROTTLE_SALT;
+    if (ip && salt) {
+      const keyHash = createHash('sha256').update(salt + ip).digest('hex');
+      const allowed = await getStore().checkReportQuota(keyHash);
+      if (!allowed) {
+        return {
+          ok: false,
+          error: 'Estás enviando reportes muy rápido. Espera un momento e intenta de nuevo.',
+        };
+      }
+    }
+  } catch {
+    // Fail-open: proceed with the report on any throttle-layer error.
+  }
+
   try {
     const location = await getStore().createLocation(parsed.data);
     revalidatePath('/');

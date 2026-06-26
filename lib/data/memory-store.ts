@@ -12,7 +12,11 @@ import { createId } from '@/lib/utils';
 import { DuplicateFundraiserError } from './fundraiser-url';
 import { applyFilters, sortLocations, withSummary } from './selectors';
 import { SEED } from './seed';
-import { PERSONAS_ATRAPADAS_DEFAULT } from './types';
+import {
+  PERSONAS_ATRAPADAS_DEFAULT,
+  REPORT_QUOTA_LIMIT,
+  REPORT_QUOTA_WINDOW_MS,
+} from './types';
 import type {
   CreateFundraiserInput,
   CreateLocationInput,
@@ -41,6 +45,8 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
   const fundraisers: Fundraiser[] = initial
     ? [...(initial.fundraisers ?? [])]
     : [...SEED.fundraisers];
+  // Tracks report submission timestamps (ms) per hashed key for rate limiting.
+  const quotaHits = new Map<string, number[]>();
 
   const compose = (): LocationWithNeeds[] =>
     locations.map((l) => withSummary(l, needs));
@@ -140,6 +146,18 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
       };
       fundraisers.unshift(record);
       return record;
+    },
+
+    async checkReportQuota(keyHash: string) {
+      const cutoff = Date.now() - REPORT_QUOTA_WINDOW_MS;
+      const hits = (quotaHits.get(keyHash) ?? []).filter((t) => t > cutoff);
+      if (hits.length >= REPORT_QUOTA_LIMIT) {
+        quotaHits.set(keyHash, hits);
+        return false;
+      }
+      hits.push(Date.now());
+      quotaHits.set(keyHash, hits);
+      return true;
     },
   };
 }

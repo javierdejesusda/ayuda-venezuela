@@ -18,6 +18,8 @@ import type {
   NeedStatus,
 } from './types';
 
+export { REPORT_QUOTA_LIMIT, REPORT_QUOTA_WINDOW_MS } from './types';
+
 export interface DataStore {
   /** True when running on the in-memory demo backend (data is not shared). */
   isDemo: boolean;
@@ -32,6 +34,13 @@ export interface DataStore {
   updateNeedStatus(id: string, status: NeedStatus): Promise<NeedRecord | null>;
   listFundraisers(): Promise<Fundraiser[]>;
   createFundraiser(input: CreateFundraiserInput): Promise<Fundraiser>;
+  /**
+   * Returns true when the caller is allowed to submit a report (quota not
+   * exceeded). Returns false when the sliding-window limit is reached.
+   * FAIL-OPEN: always returns true on infrastructure errors so a legitimate
+   * emergency report is never blocked by a throttle-table outage.
+   */
+  checkReportQuota(keyHash: string): Promise<boolean>;
 }
 
 let cached: DataStore | null = null;

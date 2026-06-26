@@ -286,5 +286,20 @@ export function createSupabaseStore(url: string, key: string): DataStore {
       }
       return toFundraiser(data as FundraiserRow);
     },
+
+    async checkReportQuota(keyHash: string) {
+      // FAIL-OPEN: any infrastructure error allows the report through so a
+      // legitimate emergency submission is never blocked by a throttle-table
+      // outage or a database that has not yet had the migration applied.
+      try {
+        const { data, error } = await client.rpc('check_report_quota', {
+          p_key_hash: keyHash,
+        });
+        if (error) return true;
+        return data !== false;
+      } catch {
+        return true;
+      }
+    },
   };
 }
