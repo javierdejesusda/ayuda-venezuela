@@ -3,6 +3,7 @@ import { HomeHero } from '@/components/home-hero';
 import { MissingPersonsLink } from '@/components/missing-persons-link';
 import { SharePanel } from '@/components/share-panel';
 import { loadHomeData } from '@/lib/data/home';
+import { stripContactPii } from '@/lib/data/selectors';
 import { getStore, PAGE_SIZE } from '@/lib/data/store';
 
 // ISR with 30-second revalidation. In-app writes call revalidatePath('/')
@@ -16,11 +17,12 @@ export default async function HomePage() {
     getStore(),
   );
 
-  // Derive the first page from the already-loaded full set to avoid a second
-  // round-trip. listLocations() returns the sorted set; slicing to PAGE_SIZE
-  // gives the bounded initial payload for the client.
-  const initialLocations = locations.slice(0, PAGE_SIZE);
-  const initialTotal = locations.length;
+  // Embed the full server-loaded set for the map (no per-visitor fetch) and a
+  // bounded first page for the list, both with reporter contact PII stripped
+  // since neither surface displays it. listLocations() returns the sorted set.
+  const mapLocations = locations.map(stripContactPii);
+  const initialLocations = mapLocations.slice(0, PAGE_SIZE);
+  const initialTotal = mapLocations.length;
 
   return (
     <div className="space-y-6">
@@ -42,6 +44,7 @@ export default async function HomePage() {
 
       <HomeExplorer
         initialLocations={initialLocations}
+        initialMapLocations={mapLocations}
         initialTotal={initialTotal}
         states={states}
         ciudadesByEstado={ciudadesByEstado}

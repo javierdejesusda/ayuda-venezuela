@@ -393,10 +393,6 @@ describe('HomeExplorer latest-wins guard', () => {
     });
 
     fetchMock
-      // Mount all=true fetch fires on render (map is the default view). It
-      // stays in flight for the duration of the test and is discarded by the
-      // requestId guard once fetch B wins.
-      .mockReturnValueOnce({ ok: true, json: () => aJson }) // mount: shares the deferred promise
       .mockReturnValueOnce({ ok: true, json: () => aJson }) // fetch A: deferred
       .mockReturnValueOnce({
         ok: true,
@@ -411,24 +407,24 @@ describe('HomeExplorer latest-wins guard', () => {
       />,
     );
 
-    // After render, the mount all=true fetch is in flight (call #1, requestId=1).
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // The default map renders from the embedded set, so no fetch fires on mount.
+    expect(fetchMock).toHaveBeenCalledTimes(0);
 
     const select = screen.getByRole('combobox', { name: /estado/i });
 
-    // Dispatch A: filter change in mapa view dispatches all=true (call #2).
+    // Dispatch A: filter change in mapa view dispatches all=true (call #1).
     fireEvent.change(select, { target: { value: 'Aragua' } });
     await act(async () => {
       vi.advanceTimersByTime(300);
     });
-    expect(fetchMock).toHaveBeenCalledTimes(2); // mount + fetch A in flight
+    expect(fetchMock).toHaveBeenCalledTimes(1); // fetch A in flight
 
-    // Dispatch B while A is still in flight (call #3).
+    // Dispatch B while A is still in flight (call #2).
     fireEvent.change(select, { target: { value: 'Miranda' } });
     await act(async () => {
       vi.advanceTimersByTime(300);
     });
-    expect(fetchMock).toHaveBeenCalledTimes(3); // mount + fetch A + fetch B
+    expect(fetchMock).toHaveBeenCalledTimes(2); // fetch A + fetch B
 
     // Flush microtasks so fetch B (immediate) applies its result.
     await act(async () => {});
@@ -440,7 +436,7 @@ describe('HomeExplorer latest-wins guard', () => {
     // B applied: total=0 -> no "Ver mas".
     expect(screen.queryByRole('button', { name: /m[aá]s/i })).toBeNull();
 
-    // Now resolve fetch A late (stale; requestId 2 < current 3).
+    // Now resolve fetch A late (stale; requestId 1 < current 2).
     await act(async () => {
       resolveAJson({ items: makeLocations(PAGE_SIZE), total: PAGE_SIZE + 10, nextCursor: PAGE_SIZE });
     });

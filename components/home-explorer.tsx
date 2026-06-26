@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import dynamic from 'next/dynamic';
 
@@ -56,34 +56,43 @@ function buildZonasUrl(
 /**
  * Client shell that filters zones and switches between the map and the list.
  *
+ * Map:  renders the full server-loaded set embedded at ISR time, so the default
+ *       view needs no per-visitor fetch. Filter changes refetch all matches.
  * List: bounded to PAGE_SIZE items; "Ver más" appends the next page.
- * Map:  always shows every matching zone by fetching with all=true on switch.
  *
  * Server-path filter changes are debounced 300 ms; the latest-wins monotonic
  * requestId guard ensures out-of-order responses are discarded.
  */
 export function HomeExplorer({
   initialLocations,
+  initialMapLocations,
   initialTotal,
   states,
   ciudadesByEstado = {},
 }: {
   initialLocations: LocationWithNeeds[];
+  /**
+   * Full matching set for the map surface, embedded by the server. Defaults to
+   * the bounded `initialLocations` so call sites that only pass the first page
+   * still render (the map then shows just that page until a fetch widens it).
+   */
+  initialMapLocations?: LocationWithNeeds[];
   initialTotal: number;
   states: string[];
   ciudadesByEstado?: Record<string, string[]>;
 }) {
+  const mapInitial = initialMapLocations ?? initialLocations;
+
   const [filters, setFilters] = useState<LocationFilters>({});
   const [view, setView] = useState<HomeView>('mapa');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [displayed, setDisplayed] = useState<LocationWithNeeds[]>(initialLocations);
   const [total, setTotal] = useState(initialTotal);
   const [cursorOffset, setCursorOffset] = useState(initialLocations.length);
-  // Map is the default view, so when the full set is not already embedded the
-  // skeleton should paint immediately while the all-pins fetch is in flight.
-  const [loading, setLoading] = useState(initialTotal > PAGE_SIZE);
+  // The default map data is already embedded, so nothing is loading on mount.
+  const [loading, setLoading] = useState(false);
   // mapLocations holds the full matching set for the map surface.
-  const [mapLocations, setMapLocations] = useState<LocationWithNeeds[]>(initialLocations);
+  const [mapLocations, setMapLocations] = useState<LocationWithNeeds[]>(mapInitial);
 
   // Monotonic counter: every dispatch increments this; stale resolves are
   // detected by comparing the captured id to the current value.
@@ -175,26 +184,6 @@ export function HomeExplorer({
     },
     [filters, initialTotal, dispatch],
   );
-
-  // Map is the default view. When the full set is not already embedded
-  // (initialTotal > PAGE_SIZE), load every matching zone once on mount so the
-  // map shows all pins instead of only the first page. Done inline (not via
-  // dispatch) so no state is set synchronously in the effect body: `loading`
-  // already starts true in that case, and the setters run only in the async
-  // resolution, guarded by the shared requestId for latest-wins.
-  useEffect(() => {
-    if (initialTotal <= PAGE_SIZE) return;
-    const thisId = ++requestIdRef.current;
-    fetchZonas(buildZonasUrl({}, { all: true }))
-      .then((data) => {
-        if (thisId !== requestIdRef.current) return;
-        setMapLocations(data.items);
-        setLoading(false);
-      })
-      .catch(() => {
-        if (thisId === requestIdRef.current) setLoading(false);
-      });
-  }, [initialTotal]);
 
   const remaining = total - displayed.length;
 
