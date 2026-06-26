@@ -12,7 +12,9 @@ import { getStore, PAGE_SIZE } from '@/lib/data/store';
 export const revalidate = 30;
 
 export default async function HomePage() {
-  const { locations, stats, states, loadFailed } = await loadHomeData(getStore());
+  const { locations, stats, states, ciudadesByEstado, loadFailed } = await loadHomeData(
+    getStore(),
+  );
 
   // Derive the first page from the already-loaded full set to avoid a second
   // round-trip. listLocations() returns the sorted set; slicing to PAGE_SIZE
@@ -42,6 +44,7 @@ export default async function HomePage() {
         initialLocations={initialLocations}
         initialTotal={initialTotal}
         states={states}
+        ciudadesByEstado={ciudadesByEstado}
       />
     </div>
   );

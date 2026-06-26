@@ -66,6 +66,7 @@ describe('loadHomeData', () => {
       [...data.states].sort((a, b) => a.localeCompare(b, 'es')),
     );
     expect(data.stats.zonas).toBe(3);
+    expect(data.ciudadesByEstado).toBeDefined();
   });
 
   it('returns non-zero danoGrave and danoParcial when mixed severities are present', async () => {
@@ -98,6 +99,29 @@ describe('loadHomeData', () => {
     expect(data.stats.zonas).toBe(5);
     // derrumbes + danoGrave + danoParcial = 3 (the 3 non-stable non-unknown zones)
     expect(data.stats.derrumbes + data.stats.danoGrave + data.stats.danoParcial).toBe(3);
+  });
+
+  it('returns ciudadesByEstado grouped by estado', async () => {
+    const store = stubStore(async () => [
+      loc({ id: 'a', estado: 'Carabobo', ciudad: 'Valencia' }),
+      loc({ id: 'b', estado: 'Carabobo', ciudad: 'Guacara' }),
+      loc({ id: 'c', estado: 'Aragua', ciudad: 'Maracay' }),
+    ]);
+
+    const data = await loadHomeData(store);
+
+    expect(data.ciudadesByEstado['Carabobo']).toEqual(['Guacara', 'Valencia']);
+    expect(data.ciudadesByEstado['Aragua']).toEqual(['Maracay']);
+  });
+
+  it('ciudadesByEstado defaults to an empty object on load failure', async () => {
+    const store = stubStore(async () => {
+      throw new Error('fetch failed');
+    });
+
+    const data = await loadHomeData(store);
+
+    expect(data.ciudadesByEstado).toEqual({});
   });
 
   it('degrades to an empty list and loadFailed when listLocations rejects', async () => {

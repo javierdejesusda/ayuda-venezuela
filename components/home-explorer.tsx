@@ -66,10 +66,12 @@ export function HomeExplorer({
   initialLocations,
   initialTotal,
   states,
+  ciudadesByEstado = {},
 }: {
   initialLocations: LocationWithNeeds[];
   initialTotal: number;
   states: string[];
+  ciudadesByEstado?: Record<string, string[]>;
 }) {
   const [filters, setFilters] = useState<LocationFilters>({});
   const [view, setView] = useState<HomeView>('lista');
@@ -180,6 +182,7 @@ export function HomeExplorer({
         value={filters}
         onChange={handleFilterChange}
         states={states}
+        ciudadesByEstado={ciudadesByEstado}
         resultCount={total}
       />
 

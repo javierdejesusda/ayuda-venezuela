@@ -13,14 +13,26 @@ interface FiltersProps {
   value: LocationFilters;
   onChange: (next: LocationFilters) => void;
   states: string[];
+  ciudadesByEstado?: Record<string, string[]>;
   resultCount: number;
 }
 
 /** Search + status + state filtering for the home explorer. */
-export function Filters({ value, onChange, states, resultCount }: FiltersProps) {
+export function Filters({
+  value,
+  onChange,
+  states,
+  ciudadesByEstado = {},
+  resultCount,
+}: FiltersProps) {
   const set = (patch: Partial<LocationFilters>) => onChange({ ...value, ...patch });
   const hasFilters = Boolean(
-    value.texto || value.estado || value.status || value.soloUrgentes || value.categoria,
+    value.texto ||
+      value.estado ||
+      value.ciudad ||
+      value.status ||
+      value.soloUrgentes ||
+      value.categoria,
   );
 
   return (
@@ -79,7 +91,9 @@ export function Filters({ value, onChange, states, resultCount }: FiltersProps) 
         <div className="min-w-40 flex-1 sm:flex-none">
           <Select
             value={value.estado ?? ''}
-            onChange={(event) => set({ estado: event.target.value || undefined })}
+            onChange={(event) =>
+              set({ estado: event.target.value || undefined, ciudad: undefined })
+            }
             aria-label="Filtrar por estado"
           >
             <option value="">Todos los estados</option>
@@ -88,6 +102,29 @@ export function Filters({ value, onChange, states, resultCount }: FiltersProps) 
                 {state}
               </option>
             ))}
+          </Select>
+        </div>
+
+        <div className="min-w-40 flex-1 sm:flex-none">
+          <Select
+            value={value.ciudad ?? ''}
+            onChange={(event) => set({ ciudad: event.target.value || undefined })}
+            disabled={!value.estado}
+            aria-label="Filtrar por ciudad"
+            aria-disabled={!value.estado}
+          >
+            {!value.estado ? (
+              <option value="">Selecciona un estado primero</option>
+            ) : (
+              <>
+                <option value="">Todas las ciudades</option>
+                {(ciudadesByEstado[value.estado] ?? []).map((ciudad) => (
+                  <option key={ciudad} value={ciudad}>
+                    {ciudad}
+                  </option>
+                ))}
+              </>
+            )}
           </Select>
         </div>
 

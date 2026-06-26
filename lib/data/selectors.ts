@@ -37,6 +37,7 @@ export function withSummary(
 
 export function matchesFilters(loc: LocationWithNeeds, f: LocationFilters): boolean {
   if (f.estado && loc.estado !== f.estado) return false;
+  if (f.ciudad && loc.ciudad !== f.ciudad) return false;
   if (f.status && loc.status !== f.status) return false;
   if (f.categoria && !loc.needs.some((n) => n.categoria === f.categoria)) return false;
   if (f.soloUrgentes && loc.summary.urgentes <= 0) return false;
@@ -109,6 +110,42 @@ export function globalStats(locations: LocationWithNeeds[]): GlobalStats {
     urgentes,
     necesidadesAbiertas,
   };
+}
+
+/**
+ * Returns distinct, sorted ciudad values for locations whose estado matches the
+ * given value. Returns an empty array when `estado` is falsy or no matches exist.
+ * Locations with an empty `ciudad` are excluded from the results.
+ */
+export function availableCiudadesForEstado(
+  locations: LocationRecord[],
+  estado: string,
+): string[] {
+  if (!estado) return [];
+  const seen = new Set<string>();
+  for (const loc of locations) {
+    if (loc.estado === estado && loc.ciudad) seen.add(loc.ciudad);
+  }
+  return Array.from(seen).sort((a, b) => a.localeCompare(b, 'es'));
+}
+
+/**
+ * Returns a map from each estado to its distinct sorted ciudades. Estados with
+ * only empty ciudades are omitted. Used to thread city options server-side in a
+ * single object so the client never has to derive them from a partial list.
+ */
+export function ciudadesByEstado(locations: LocationRecord[]): Record<string, string[]> {
+  const map: Record<string, Set<string>> = {};
+  for (const loc of locations) {
+    if (!loc.ciudad) continue;
+    if (!map[loc.estado]) map[loc.estado] = new Set();
+    map[loc.estado].add(loc.ciudad);
+  }
+  const result: Record<string, string[]> = {};
+  for (const [estado, set] of Object.entries(map)) {
+    result[estado] = Array.from(set).sort((a, b) => a.localeCompare(b, 'es'));
+  }
+  return result;
 }
 
 /**
