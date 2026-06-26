@@ -156,6 +156,16 @@ export const statusMeta: Record<EmergencyStatus, Meta> = {
   },
 };
 
+/**
+ * statusMeta lookup that survives an unknown or legacy status value. A row
+ * written before the severity migration can still carry 'danado', which is no
+ * longer a statusMeta key; rendering `statusMeta[status].tone` directly would
+ * throw on the undefined. Falls back to the neutral 'desconocido' meta instead.
+ */
+export function resolveStatusMeta(status: EmergencyStatus): Meta {
+  return statusMeta[status] ?? statusMeta.desconocido;
+}
+
 export const urgencyMeta: Record<Urgency, Meta> = {
   alta: { label: 'Urgente', tone: 'danger', icon: TriangleAlert },
   media: { label: 'Media', tone: 'warning', icon: Clock },

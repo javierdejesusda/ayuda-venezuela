@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { PersonasAtrapadasBadge, StatusBadge } from '@/components/status-badges';
+import type { EmergencyStatus } from '@/lib/data/types';
 
 afterEach(() => {
   cleanup();
@@ -22,6 +23,14 @@ describe('StatusBadge', () => {
   it('renders for derrumbe', () => {
     render(<StatusBadge status="derrumbe" />);
     expect(screen.getByText('Derrumbe')).toBeTruthy();
+  });
+
+  it('falls back to "Sin confirmar" for an unknown legacy status instead of throwing', () => {
+    // A pre-severity-migration row can still carry the legacy 'danado' status,
+    // which is no longer a key in statusMeta. The badge must degrade gracefully.
+    const legacy = 'danado' as EmergencyStatus;
+    expect(() => render(<StatusBadge status={legacy} />)).not.toThrow();
+    expect(screen.getByText('Sin confirmar')).toBeTruthy();
   });
 });
 

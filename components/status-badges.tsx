@@ -13,7 +13,7 @@ import type {
 import {
   categoryMeta,
   needStatusMeta,
-  statusMeta,
+  resolveStatusMeta,
   toneClasses,
   urgencyMeta,
 } from '@/lib/status';
@@ -30,7 +30,7 @@ export function StatusBadge({
   size?: BadgeSize;
   variant?: BadgeVariant;
 }) {
-  const m = statusMeta[status];
+  const m = resolveStatusMeta(status);
   return (
     <Badge tone={m.tone} icon={m.icon} size={size} variant={variant}>
       {m.label}

@@ -8,7 +8,7 @@ import { loadZone } from '@/lib/data/zone';
 import { loadZoneCluster } from '@/lib/data/zone-cluster';
 import { buildDirectionsLinks } from '@/lib/directions';
 import { FUENTE_REPORTE_LABELS } from '@/lib/data/types';
-import { statusMeta, toneClasses } from '@/lib/status';
+import { resolveStatusMeta, toneClasses } from '@/lib/status';
 import { formatRelativeTime, telHref } from '@/lib/utils';
 import { SharePanel } from '@/components/share-panel';
 import { PersonasAtrapadasBadge, StatusBadge } from '@/components/status-badges';
@@ -82,7 +82,7 @@ export default async function ZonaPage({ params }: Props) {
   const effectivePersonasAtrapadas = cluster?.personas_atrapadas ?? location.personas_atrapadas;
   const effectiveFotos = cluster?.fotos ?? location.fotos ?? [];
 
-  const tone = statusMeta[effectiveStatus].tone;
+  const tone = resolveStatusMeta(effectiveStatus).tone;
   const tones = toneClasses(tone);
   const isDerrumbe = effectiveStatus === 'derrumbe';
   const fotos = effectiveFotos;
