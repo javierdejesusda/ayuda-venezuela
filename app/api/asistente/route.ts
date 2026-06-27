@@ -16,23 +16,20 @@ import type { UIMessage } from 'ai';
 import { clientIp, createRateLimiter } from '@/lib/ai/rate-limit';
 import { ASSISTANT_SYSTEM_PROMPT } from '@/lib/ai/system-prompt';
 import { buscarZonas } from '@/lib/ai/tools';
+import { validateChatRequest } from '@/lib/ai/validate-request';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
-
-/** Maximum length of the user message content to prevent abuse. */
-const MAX_MESSAGE_LENGTH = 1000;
 
 const ASSISTANT_MODEL = openai('gpt-4o-mini');
 
 const limiter = createRateLimiter({ limit: 10, windowMs: 15 * 60 * 1000 });
 
 export async function POST(req: Request): Promise<Response> {
-  let messages: UIMessage[];
+  let body: unknown;
 
   try {
-    const body = (await req.json()) as { messages?: UIMessage[] };
-    messages = body.messages ?? [];
+    body = await req.json();
   } catch {
     return Response.json(
       { error: 'Solicitud no valida. Por favor intenta de nuevo.' },
@@ -40,25 +37,12 @@ export async function POST(req: Request): Promise<Response> {
     );
   }
 
-  if (messages.length === 0) {
-    return Response.json(
-      { error: 'El mensaje no puede estar vacio.' },
-      { status: 400 },
-    );
+  const validation = validateChatRequest(body);
+  if (!validation.ok) {
+    return Response.json({ error: validation.message }, { status: validation.status });
   }
 
-  const lastMessage = messages[messages.length - 1];
-  const textContent = lastMessage.parts
-    ?.filter((p) => p.type === 'text')
-    .map((p) => ('text' in p ? p.text : ''))
-    .join('');
-
-  if (textContent && textContent.length > MAX_MESSAGE_LENGTH) {
-    return Response.json(
-      { error: 'El mensaje es demasiado largo. Por favor acorta tu pregunta.' },
-      { status: 400 },
-    );
-  }
+  const messages: UIMessage[] = validation.messages;
 
   const ip = clientIp(req.headers);
   const outcome = limiter.check(ip);
