@@ -35,7 +35,7 @@ import {
   type PlacementResult,
 } from '@/lib/map/preview';
 import { formatPlaceEs, relativeTimeEs } from '@/lib/sismos/format';
-import { magnitudeStyle } from '@/lib/sismos/magnitude';
+import { epicenterStyleForSismo } from '@/lib/sismos/magnitude';
 import type { Sismo } from '@/lib/sismos/types';
 import { resolveStatusMeta, statusMeta, TONE_HEX } from '@/lib/status';
 import { useNow } from '@/lib/use-now';
@@ -98,23 +98,43 @@ function buildPinIcon(hex: string, selected: boolean, pulse: boolean): L.DivIcon
 /**
  * Builds an epicenter marker: a hollow ring with a faint fill and a center dot,
  * deliberately distinct from the solid damage pins. Strong quakes radiate the
- * shared `seismic-ring` pulse.
+ * shared `seismic-ring` pulse; the most recent quake gets a second staggered
+ * ring for immediate legibility. Opacity encodes age (fresh = 1, old = 0.45).
  */
-function buildEpicenterIcon(color: string, radiusPx: number, pulse: boolean): L.DivIcon {
+function buildEpicenterIcon(
+  color: string,
+  radiusPx: number,
+  pulse: boolean,
+  isDark: boolean,
+  isMostRecent: boolean,
+  opacity: number,
+): L.DivIcon {
   const size = radiusPx * 2;
-  const pulseEl = pulse
-    ? `<span class="seismic-ring" style="position:absolute;inset:-3px;border-radius:50%;border:1.5px solid ${color};"></span>`
+  // Thin outline that separates the hollow ring from the tile behind it on
+  // both light (CARTO light) and dark (CARTO dark) basemaps.
+  const outline = isDark ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.13)';
+  const borderPx = isMostRecent ? 2.5 : 1.5;
+  const dotPx = isMostRecent ? 4 : 3;
+  // Primary pulse for strong or most-recent quakes.
+  const primaryPulse =
+    pulse || isMostRecent
+      ? `<span class="seismic-ring" style="position:absolute;inset:-4px;border-radius:50%;border:1.5px solid ${color};"></span>`
+      : '';
+  // Second staggered ring marks the most recent quake distinctly.
+  const recentPulse = isMostRecent
+    ? `<span class="seismic-ring" style="position:absolute;inset:-9px;border-radius:50%;border:1px solid ${color};animation-delay:-0.9s;opacity:0.65;"></span>`
     : '';
-  const html = `<div style="position:relative;width:${size}px;height:${size}px;">
-    ${pulseEl}
+  const html = `<div style="position:relative;width:${size}px;height:${size}px;opacity:${opacity};">
+    ${primaryPulse}
+    ${recentPulse}
     <div style="
       position:absolute;inset:0;border-radius:50%;
-      border:2px solid ${color};background:${color}22;
-      box-shadow:0 0 0 1px rgba(255,255,255,0.5);
+      border:${borderPx}px solid ${color};background:${color}1a;
+      box-shadow:0 0 0 1px ${outline};
       box-sizing:border-box;
     "></div>
     <span style="
-      position:absolute;top:50%;left:50%;width:3px;height:3px;
+      position:absolute;top:50%;left:50%;width:${dotPx}px;height:${dotPx}px;
       transform:translate(-50%,-50%);border-radius:50%;background:${color};
     "></span>
   </div>`;
@@ -238,12 +258,23 @@ const AYUDA_LEGEND_ITEMS = [
   { tone: 'brand', label: 'Baja / sin urgencia' },
 ] as const;
 
+const SISMO_LEGEND_ITEMS = [
+  { color: '#f97316', label: 'M < 4.5', ring: false },
+  { color: '#ef4444', label: 'M 4.5+ · pulso', ring: true },
+] as const;
+
 /**
  * Compact overlay listing statuses with color swatch + label.
  * Below sm it collapses to a pill so it never covers top-right pins;
  * at sm and up it stays open.
  */
-function Legend({ mode = 'danos' }: { mode?: ExplorerMode }): React.JSX.Element {
+function Legend({
+  mode = 'danos',
+  hasSismos = false,
+}: {
+  mode?: ExplorerMode;
+  hasSismos?: boolean;
+}): React.JSX.Element {
   const [open, setOpen] = useState(false);
   const title = mode === 'ayuda' ? 'Urgencia' : 'Estado';
 
@@ -305,6 +336,26 @@ function Legend({ mode = 'danos' }: { mode?: ExplorerMode }): React.JSX.Element 
                 );
               })}
         </ul>
+
+        {hasSismos && (
+          <>
+            <div className="border-t border-border my-2" role="separator" aria-hidden="true" />
+            <p className="eyebrow text-ink-faint mb-1.5">Sismos</p>
+            <ul className="space-y-1" role="list" aria-label="Referencias de epicentros">
+              {SISMO_LEGEND_ITEMS.map((item) => (
+                <li key={item.color} className="flex items-center gap-1.5">
+                  {/* Hollow ring swatch - visually distinct from the solid pin swatches above. */}
+                  <span
+                    aria-hidden="true"
+                    style={{ border: `1.5px solid ${item.color}`, backgroundColor: 'transparent' }}
+                    className="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0"
+                  />
+                  <span className="text-ink-soft leading-none">{item.label}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
     </div>
   );
@@ -481,17 +532,28 @@ export default function MapView({
     return cache;
   }, [valid, selectedId, pulsingIds, mode]);
 
-  // Epicenter icons sized/colored by magnitude; the newest and strong quakes
-  // pulse. Memoized so DivIcons are not rebuilt on every render.
+  // Bucket to the nearest hour so icons only rebuild when the recency tier
+  // changes, not on every minute tick of useNow.
+  const nowHour = now !== null ? Math.floor(now / 3_600_000) : 0;
+
+  // Epicenter icons sized/colored by magnitude, faded by age, with the most
+  // recent quake wearing a double ring. Rebuilt when theme, motion pref, sismos
+  // list, or the recency hour-bucket changes.
   const epicenterIcons = useMemo(() => {
+    // now is null on SSR; age clamps to 0 so all icons render at full opacity.
+    const ts = now ?? 0;
     const cache = new Map<string, L.DivIcon>();
     sismos.forEach((s, i) => {
-      const style = magnitudeStyle(s.magnitude);
-      const pulse = !reducedMotion && (style.pulse || i === 0);
-      cache.set(s.id, buildEpicenterIcon(style.color, style.radiusPx, pulse));
+      const style = epicenterStyleForSismo(s, ts, i === 0);
+      const pulse = !reducedMotion && (style.pulse || style.isMostRecent);
+      cache.set(
+        s.id,
+        buildEpicenterIcon(style.color, style.radiusPx, pulse, isDark, !reducedMotion && style.isMostRecent, style.opacity),
+      );
     });
     return cache;
-  }, [sismos, reducedMotion]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sismos, reducedMotion, isDark, nowHour]);
 
   return (
     <div
@@ -520,7 +582,7 @@ export default function MapView({
 
         <GeolocationButton />
 
-        <Legend mode={mode} />
+        <Legend mode={mode} hasSismos={sismos.length > 0} />
 
         {canHover && <ClearHoverOnMove onClear={clearHover} />}
 
