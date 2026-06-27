@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 
-import { HeartHandshake, Inbox } from 'lucide-react';
+import { HeartHandshake } from 'lucide-react';
 
 import { AddFundraiserForm } from '@/components/add-fundraiser-form';
-import { EmptyState } from '@/components/empty-state';
-import { FundraiserCard } from '@/components/fundraiser-card';
+import { FundraiserList } from '@/components/fundraiser-list';
 import { PageHeader } from '@/components/page-header';
 import { getStore } from '@/lib/data/store';
 import type { Fundraiser } from '@/lib/data/types';
@@ -37,24 +36,7 @@ export default async function RecaudacionesPage() {
           Campañas activas
         </h2>
 
-        {fundraisers.length > 0 ? (
-          <ul
-            role="list"
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-          >
-            {fundraisers.map((fundraiser) => (
-              <li key={fundraiser.id}>
-                <FundraiserCard fundraiser={fundraiser} />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyState
-            icon={Inbox}
-            title="Aún no hay recaudaciones"
-            description="Sé la primera persona en compartir una campaña de GoFundMe para ayudar a las víctimas del terremoto."
-          />
-        )}
+        <FundraiserList fundraisers={fundraisers} />
       </section>
 
       <section aria-labelledby="comparte-recaudacion">
