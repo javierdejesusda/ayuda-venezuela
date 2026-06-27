@@ -59,6 +59,21 @@ describe('createRateLimiter', () => {
     // window expires at t=30s; now is t=10s → 20 s remaining
     expect(result.retryAfterSeconds).toBe(20);
   });
+
+  it('evicts expired entries so the window map does not grow unbounded', () => {
+    let now = 0;
+    const limiter = createRateLimiter({ limit: 5, windowMs: 1_000, now: () => now });
+
+    limiter.check('a');
+    limiter.check('b');
+    expect(limiter.size()).toBe(2);
+
+    now = 1_001; // both windows have expired
+
+    limiter.check('c');
+
+    expect(limiter.size()).toBe(1);
+  });
 });
 
 describe('clientIp', () => {
@@ -70,6 +85,15 @@ describe('clientIp', () => {
 
   it('falls back to x-real-ip when x-forwarded-for is absent', () => {
     const headers = new Headers({ 'x-real-ip': '9.9.9.9' });
+
+    expect(clientIp(headers)).toBe('9.9.9.9');
+  });
+
+  it('prefers the platform-trusted x-real-ip over x-forwarded-for', () => {
+    const headers = new Headers({
+      'x-real-ip': '9.9.9.9',
+      'x-forwarded-for': '1.2.3.4, 5.6.7.8',
+    });
 
     expect(clientIp(headers)).toBe('9.9.9.9');
   });
