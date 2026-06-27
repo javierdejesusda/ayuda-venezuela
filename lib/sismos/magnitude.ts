@@ -15,8 +15,18 @@ export interface MagnitudeStyle {
   pulse: boolean;
 }
 
+/** Extends MagnitudeStyle with recency and most-recent signals for map rendering. */
+export interface EpicenterStyle extends MagnitudeStyle {
+  /** Opacity 0-1 encoding age: 1 (<12h), 0.7 (12-72h), 0.45 (older). */
+  opacity: number;
+  /** True for the single most-recent quake in a set - rendered with a double ring. */
+  isMostRecent: boolean;
+}
+
 /** Magnitude at or above which an epicenter pulses. */
 export const STRONG_MAGNITUDE = 4.5;
+
+const HOUR_MS = 3_600_000;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -33,4 +43,32 @@ export function magnitudeStyle(mag: number): MagnitudeStyle {
   else color = '#b91c1c'; // deep red
 
   return { radiusPx, color, pulse: mag >= STRONG_MAGNITUDE };
+}
+
+/**
+ * Opacity weight for an epicenter based on how long ago the quake occurred.
+ * Older quakes recede visually so the most recent ones read first.
+ */
+export function recencyOpacity(ageMs: number): number {
+  if (ageMs < 12 * HOUR_MS) return 1;
+  if (ageMs < 72 * HOUR_MS) return 0.7;
+  return 0.45;
+}
+
+/**
+ * Combines magnitude style with recency and most-recent flag into a single
+ * descriptor used by the map to render each epicenter marker.
+ */
+export function epicenterStyleForSismo(
+  sismo: { magnitude: number; time: number },
+  now: number,
+  isMostRecent: boolean,
+): EpicenterStyle {
+  const base = magnitudeStyle(sismo.magnitude);
+  const ageMs = Math.max(0, now - sismo.time);
+  return {
+    ...base,
+    opacity: recencyOpacity(ageMs),
+    isMostRecent,
+  };
 }
