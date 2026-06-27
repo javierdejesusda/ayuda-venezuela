@@ -1,3 +1,4 @@
+import { AccessRestrictionAdvisory } from '@/components/access-restriction-advisory';
 import { HomeExplorer } from '@/components/home-explorer';
 import { HomeHero } from '@/components/home-hero';
 import { MissingPersonsLink } from '@/components/missing-persons-link';
@@ -37,6 +38,8 @@ export default async function HomePage() {
       <SeismicTicker sismos={sismos} />
 
       <HomeHero stats={stats} />
+
+      <AccessRestrictionAdvisory />
 
       <RescueAdvisory />
 
