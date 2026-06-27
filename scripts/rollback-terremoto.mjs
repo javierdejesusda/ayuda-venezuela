@@ -1,7 +1,8 @@
 /**
- * Reverse the terremotovenezuela.com import: delete every location tagged with
- * a `source_ref` and remove the photos it re-hosted under `fotos/terremoto/`.
- * Organic (user-submitted) rows have a null `source_ref` and are never touched.
+ * Reverse the terremotovenezuela.com import, SCOPED to that source only: delete
+ * every location whose `source_ref` points at terremotovenezuela.com and remove
+ * the photos it re-hosted under `fotos/terremoto/`. Organic (user-submitted)
+ * rows and other imports (e.g. ayudaencamino.com) are never touched.
  *
  * Credentials from the environment: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
  *
@@ -13,6 +14,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const BUCKET = 'fotos';
 const PREFIX = 'terremoto';
+const SOURCE_MATCH = '%terremotovenezuela.com%';
 
 function requireEnv(name) {
   const value = process.env[name];
@@ -34,7 +36,7 @@ async function main() {
   const { data: rows, error: selErr } = await supabase
     .from('locations')
     .select('id')
-    .not('source_ref', 'is', null);
+    .ilike('source_ref', SOURCE_MATCH);
   if (selErr) throw selErr;
   console.error(`Imported locations to delete: ${rows.length}`);
 
@@ -52,7 +54,7 @@ async function main() {
 
   // Delete DB rows first: a failed delete leaves both sides intact (retryable).
   // Removing storage first would orphan rows whose photos are already gone.
-  const { error: delErr } = await supabase.from('locations').delete().not('source_ref', 'is', null);
+  const { error: delErr } = await supabase.from('locations').delete().ilike('source_ref', SOURCE_MATCH);
   if (delErr) throw delErr;
 
   if (objects.length > 0) {
