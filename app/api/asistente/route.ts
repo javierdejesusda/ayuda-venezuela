@@ -13,6 +13,7 @@ import {
 } from 'ai';
 import type { UIMessage } from 'ai';
 
+import { assistantErrorMessage } from '@/lib/ai/error-message';
 import { clientIp, createRateLimiter } from '@/lib/ai/rate-limit';
 import { ASSISTANT_SYSTEM_PROMPT } from '@/lib/ai/system-prompt';
 import { buscarZonas } from '@/lib/ai/tools';
@@ -60,6 +61,11 @@ export async function POST(req: Request): Promise<Response> {
     );
   }
 
+  // Grounding relies on the strict system prompt plus a single buscarZonas tool
+  // with the default toolChoice 'auto'. 'auto' (not 'required') is deliberate:
+  // it lets the model run the tool, then take a second step to answer from the
+  // returned data, which an empty-state honest reply also needs. The blast
+  // radius of any client-fabricated history is the requesting user only.
   const result = streamText({
     model: ASSISTANT_MODEL,
     system: ASSISTANT_SYSTEM_PROMPT,
@@ -70,8 +76,10 @@ export async function POST(req: Request): Promise<Response> {
 
   const uiStream = toUIMessageStream({
     stream: result.stream,
-    onError: (error) =>
-      error instanceof Error ? error.message : 'Error inesperado. Intenta de nuevo.',
+    onError: (error) => {
+      console.error('asistente stream error:', error);
+      return assistantErrorMessage(error);
+    },
   });
 
   return createUIMessageStreamResponse({ stream: uiStream });
