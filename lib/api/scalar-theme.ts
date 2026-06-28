@@ -53,4 +53,37 @@ export const SCALAR_BRAND_CSS = `
   font-family: var(--font-display);
   letter-spacing: -0.02em;
 }
+
+/*
+ * Strip the dashboard chrome Scalar ships for API editors. None of it applies to
+ * a public, read-only reference: the top toolbar (Developer Tools / Configure /
+ * Share / Deploy) and the sidebar "Ask AI" button (the divider + button that
+ * follow the search field). Removing them is what makes the page stop reading as
+ * a third-party tool and start reading as part of this site.
+ */
+.scalar-app .api-reference-toolbar {
+  display: none !important;
+}
+.references-layout aside [role="search"] ~ * {
+  display: none !important;
+}
+.scalar-app a[href*="scalar.com"] {
+  display: none !important;
+}
+
+/*
+ * Layout. The site header is a 4rem sticky bar; pin Scalar's sticky sidebar just
+ * below it instead of letting it slide underneath, and cap the reading column so
+ * prose and schemas keep a comfortable measure on very wide screens.
+ */
+.scalar-app.references-layout {
+  --refs-header-height: 4rem;
+  --refs-content-max-width: 1100px;
+}
+
+/* Make Scalar's sidebar search read like the site's own inputs. */
+.scalar-app .t-doc__sidebar [role="search"] {
+  border-radius: 0.5rem;
+  height: 2.25rem;
+}
 `;

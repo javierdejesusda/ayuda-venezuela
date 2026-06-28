@@ -28,8 +28,9 @@ export function ApiReferenceEmbed() {
   const { theme } = useTheme();
 
   return (
-    // Break out of the max-w-5xl main column so the reference gets full width.
-    <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen min-h-[calc(100vh-4rem)]">
+    // The parent page owns the full-bleed breakout; keep a min height so the
+    // loading state and short documents do not collapse the surface.
+    <div className="min-h-[calc(100vh-12rem)]">
       <ApiReferenceReact key={theme} configuration={scalarDocsConfig(theme)} />
     </div>
   );

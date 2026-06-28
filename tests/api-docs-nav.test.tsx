@@ -27,6 +27,19 @@ describe('API docs Markdown download', () => {
     const link = screen.getByRole('link', { name: /openapi json/i });
     expect(link).toHaveAttribute('href', '/api/v1/openapi.json');
   });
+
+  it('frames the Markdown download as the recommended option for AI agents', () => {
+    render(<ApiDocsToolbar />);
+
+    const link = screen.getByRole('link', { name: /markdown/i });
+    expect(link).toHaveAccessibleName(/agentes/i);
+  });
+
+  it('shows the API base URL so developers can copy where to call', () => {
+    render(<ApiDocsToolbar />);
+
+    expect(screen.getByText(/\/api\/v1/)).toBeInTheDocument();
+  });
 });
 
 describe('API docs navigation access', () => {

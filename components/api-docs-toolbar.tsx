@@ -1,67 +1,80 @@
 import { Braces, FileDown, FileJson2 } from 'lucide-react';
 
-/** Small metadata pill shown in the header badge row. */
+import { ApiBaseUrl } from '@/components/api-base-url';
+import { buttonClasses } from '@/components/ui/button';
+import { SITE_URL } from '@/lib/constants';
+
+/** Metadata pills shown under the title. */
 const BADGES = ['v1.0.0', 'OpenAPI 3.1', 'Solo lectura'] as const;
 
+/** Absolute base URL every endpoint hangs off of. */
+const BASE_URL = `${SITE_URL}/api/v1`;
+
 /**
- * Branded header above the API reference. States what the API is in one line and
- * offers the full reference as a Markdown download (handy as context for code
- * agents) and as raw OpenAPI JSON. Uses the civic brand blue, never the
- * emergency semaphore colors, so it reads as a developer surface.
+ * Masthead for the API reference. A full-bleed band that sits flush above the
+ * Scalar reference (no floating card, no gap) so the page reads as one surface.
+ * It states what the API is, exposes the base URL one tap from the clipboard, and
+ * offers the full reference as a Markdown download (the recommended context for AI
+ * agents) and as raw OpenAPI JSON. Civic brand blue only, never the emergency
+ * semaphore colors, so it reads as a developer surface.
  */
 export function ApiDocsToolbar() {
   return (
-    <div className="relative mb-4 overflow-hidden rounded-2xl border border-border bg-surface-2 p-5">
+    <header className="relative border-b border-border bg-surface">
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-brand-600 via-brand-400 to-transparent opacity-70"
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-brand-600 via-brand-400 to-transparent"
       />
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-6 px-4 py-7 sm:px-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10 lg:px-8">
         <div className="min-w-0">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white">
-              <Braces className="h-5 w-5" aria-hidden />
-            </span>
-            <h1 className="text-balance font-display text-xl font-semibold tracking-tight text-ink">
-              API de Apoyo Venezuela
-            </h1>
-          </div>
+          <p className="inline-flex items-center gap-1.5 rounded-full border border-brand-500/20 bg-brand-50 py-1 pl-2 pr-2.5 text-tone-brand-text dark:border-brand-400/25 dark:bg-brand-500/10">
+            <Braces className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="eyebrow">API pública</span>
+          </p>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+            API de Apoyo Venezuela
+          </h1>
+
+          <p className="mt-2 max-w-xl text-pretty text-sm text-ink-soft">
+            Referencia interactiva de solo lectura sobre zonas afectadas, pedidos de ayuda, campañas
+            y estadísticas. Toda la documentación está abajo, ya expandida.
+          </p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             {BADGES.map((badge) => (
               <span
                 key={badge}
-                className="rounded-full border border-border bg-surface px-2.5 py-0.5 text-xs font-medium text-ink-soft"
+                className="rounded-full border border-border bg-surface-2 px-2.5 py-0.5 text-xs font-medium text-ink-soft"
               >
                 {badge}
               </span>
             ))}
+            <ApiBaseUrl url={BASE_URL} />
           </div>
-
-          <p className="mt-3 max-w-2xl text-pretty text-sm text-ink-soft">
-            API pública de solo lectura. Descarga la referencia en Markdown para usarla como contexto
-            con agentes de código, o consulta el documento OpenAPI en JSON.
-          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto">
           <a
             href="/api/v1/openapi.md"
             download="apoyo-venezuela-api.md"
-            className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl bg-brand-600 px-4 text-sm font-medium text-white transition-[background-color,transform] duration-150 hover:bg-brand-700 active:scale-[0.96]"
+            className="group flex items-center gap-3 rounded-xl bg-brand-600 px-4 py-2.5 text-left text-white shadow-sm transition-[background-color,transform] duration-150 hover:bg-brand-700 active:scale-[0.96]"
           >
-            <FileDown className="h-4 w-4" aria-hidden />
-            Descargar Markdown
+            <FileDown className="h-5 w-5 shrink-0" aria-hidden />
+            <span className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold">Descargar Markdown</span>
+              <span className="text-xs text-white/80">Mejor contexto para agentes de IA</span>
+            </span>
           </a>
           <a
             href="/api/v1/openapi.json"
-            className="inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl border border-border-strong bg-surface px-4 text-sm font-medium text-ink transition-[background-color,transform] duration-150 hover:bg-surface-2 active:scale-[0.96]"
+            className={buttonClasses('outline', 'md', 'w-full justify-center')}
           >
             <FileJson2 className="h-4 w-4 text-brand-600" aria-hidden />
             OpenAPI JSON
           </a>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
