@@ -38,6 +38,9 @@ export function SiteFooter() {
           <Link href="/guia" className="hover:text-ink">
             Guía
           </Link>
+          <Link href="/api-docs" className="hover:text-ink">
+            API
+          </Link>
           <a
             href={DESAPARECIDOS_URL}
             target="_blank"
