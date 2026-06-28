@@ -72,13 +72,23 @@ export const SCALAR_BRAND_CSS = `
 }
 
 /*
+ * Also drop Scalar's AI / MCP up-sell affordances (the "Ask AI Agent" button on
+ * each operation and the "Generate MCP" link at the foot of the sidebar). The
+ * interactive "Test Request" console stays; only the third-party prompts go.
+ */
+.scalar-app .agent-button-container,
+.scalar-app .scalar-mcp-layer {
+  display: none !important;
+}
+
+/*
  * Layout. The site header is a 4rem sticky bar; pin Scalar's sticky sidebar just
- * below it instead of letting it slide underneath, and cap the reading column so
- * prose and schemas keep a comfortable measure on very wide screens.
+ * below it instead of letting it slide underneath. (The content width is left at
+ * Scalar's default: capping it makes Scalar center the section and open a dead
+ * band of left margin, which is exactly the "empty / broken" feel we are fixing.)
  */
 .scalar-app.references-layout {
   --refs-header-height: 4rem;
-  --refs-content-max-width: 1100px;
 }
 
 /* Make Scalar's sidebar search read like the site's own inputs. */

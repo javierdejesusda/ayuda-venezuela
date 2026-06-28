@@ -19,8 +19,4 @@ describe('SCALAR_BRAND_CSS', () => {
   it('offsets the sticky sidebar below the site header instead of under it', () => {
     expect(SCALAR_BRAND_CSS).toContain('--refs-header-height');
   });
-
-  it('keeps the reading column to a comfortable measure on wide screens', () => {
-    expect(SCALAR_BRAND_CSS).toContain('--refs-content-max-width');
-  });
 });
