@@ -6,9 +6,12 @@
 import { corsHeaders, handleOptions, withApiError } from '@/lib/api/http';
 import { openApiDocument } from '@/lib/api/openapi';
 import { openApiToMarkdown } from '@/lib/api/openapi-markdown';
+import { SITE_URL } from '@/lib/constants';
 
-// The contract is static, so render the Markdown once at module load.
-const OPENAPI_MD = openApiToMarkdown(openApiDocument);
+// The contract is static, so render the Markdown once at module load. The
+// canonical site URL is baked in so every endpoint in the file is directly
+// callable, even when the file is downloaded and read offline by an agent.
+const OPENAPI_MD = openApiToMarkdown(openApiDocument, SITE_URL);
 const OPENAPI_CACHE = 'public, s-maxage=3600';
 
 export function OPTIONS(): Response {
