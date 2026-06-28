@@ -87,7 +87,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="es"
       data-theme="light"
       suppressHydrationWarning
-      className={`${display.variable} ${sans.variable} h-full`}
+      className={`${display.variable} ${sans.variable} h-full overflow-x-clip`}
     >
       <head>
         {/* Apply the persisted theme before first paint to avoid a flash. */}

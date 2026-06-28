@@ -11,10 +11,13 @@ export const metadata: Metadata = {
 };
 
 export default function ApiDocsPage() {
+  // Break out of the centered max-w-5xl main column and cancel its top padding so
+  // the masthead sits flush under the sticky header and the whole docs surface
+  // (header band + Scalar reference) spans the full viewport as one piece.
   return (
-    <>
+    <div className="relative left-1/2 right-1/2 -mx-[50vw] -mt-4 w-screen">
       <ApiDocsToolbar />
       <ApiReferenceEmbed />
-    </>
+    </div>
   );
 }

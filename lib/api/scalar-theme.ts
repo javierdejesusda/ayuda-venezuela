@@ -53,4 +53,47 @@ export const SCALAR_BRAND_CSS = `
   font-family: var(--font-display);
   letter-spacing: -0.02em;
 }
+
+/*
+ * Strip the dashboard chrome Scalar ships for API editors. None of it applies to
+ * a public, read-only reference: the top toolbar (Developer Tools / Configure /
+ * Share / Deploy) and the sidebar "Ask AI" button (the divider + button that
+ * follow the search field). Removing them is what makes the page stop reading as
+ * a third-party tool and start reading as part of this site.
+ */
+.scalar-app .api-reference-toolbar {
+  display: none !important;
+}
+.references-layout aside [role="search"] ~ * {
+  display: none !important;
+}
+.scalar-app a[href*="scalar.com"] {
+  display: none !important;
+}
+
+/*
+ * Also drop Scalar's AI / MCP up-sell affordances (the "Ask AI Agent" button on
+ * each operation and the "Generate MCP" link at the foot of the sidebar). The
+ * interactive "Test Request" console stays; only the third-party prompts go.
+ */
+.scalar-app .agent-button-container,
+.scalar-app .scalar-mcp-layer {
+  display: none !important;
+}
+
+/*
+ * Layout. The site header is a 4rem sticky bar; pin Scalar's sticky sidebar just
+ * below it instead of letting it slide underneath. (The content width is left at
+ * Scalar's default: capping it makes Scalar center the section and open a dead
+ * band of left margin, which is exactly the "empty / broken" feel we are fixing.)
+ */
+.scalar-app.references-layout {
+  --refs-header-height: 4rem;
+}
+
+/* Make Scalar's sidebar search read like the site's own inputs. */
+.scalar-app .t-doc__sidebar [role="search"] {
+  border-radius: 0.5rem;
+  height: 2.25rem;
+}
 `;
