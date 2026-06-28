@@ -15,7 +15,7 @@ const ApiReferenceReact = dynamic(
   {
     ssr: false,
     loading: () => (
-      <p className="px-4 py-16 text-center text-sm text-ink-soft">Cargando documentacion...</p>
+      <p className="px-4 py-16 text-center text-sm text-ink-soft">Cargando documentación...</p>
     ),
   },
 );

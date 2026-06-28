@@ -48,6 +48,9 @@ export function ApiBaseUrl({ url }: { url: string }) {
           />
         </span>
       </button>
+      <span className="sr-only" role="status" aria-live="polite">
+        {copied ? 'Base URL copiada' : ''}
+      </span>
     </span>
   );
 }
