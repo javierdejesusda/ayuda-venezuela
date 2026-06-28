@@ -4,11 +4,22 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/' }));
 
+import { ApiDocsToolbar } from '@/components/api-docs-toolbar';
 import { HeaderNav } from '@/components/header-nav';
 import { SiteFooter } from '@/components/site-footer';
 
 afterEach(() => {
   cleanup();
+});
+
+describe('API docs Markdown download', () => {
+  it('offers a download link to the Markdown reference', () => {
+    render(<ApiDocsToolbar />);
+
+    const link = screen.getByRole('link', { name: /markdown/i });
+    expect(link).toHaveAttribute('href', '/api/v1/openapi.md');
+    expect(link).toHaveAttribute('download');
+  });
 });
 
 describe('API docs navigation access', () => {

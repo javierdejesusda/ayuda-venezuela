@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { ApiDocsToolbar } from '@/components/api-docs-toolbar';
 import { ApiReferenceEmbed } from '@/components/api-reference-embed';
 
 export const metadata: Metadata = {
@@ -10,5 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default function ApiDocsPage() {
-  return <ApiReferenceEmbed />;
+  return (
+    <>
+      <ApiDocsToolbar />
+      <ApiReferenceEmbed />
+    </>
+  );
 }
