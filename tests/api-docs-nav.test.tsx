@@ -20,6 +20,13 @@ describe('API docs Markdown download', () => {
     expect(link).toHaveAttribute('href', '/api/v1/openapi.md');
     expect(link).toHaveAttribute('download');
   });
+
+  it('links to the raw OpenAPI JSON document', () => {
+    render(<ApiDocsToolbar />);
+
+    const link = screen.getByRole('link', { name: /openapi json/i });
+    expect(link).toHaveAttribute('href', '/api/v1/openapi.json');
+  });
 });
 
 describe('API docs navigation access', () => {
