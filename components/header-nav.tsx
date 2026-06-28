@@ -12,6 +12,7 @@ const NAV = [
   { href: '/telefonos', label: 'Teléfonos' },
   { href: '/guia', label: 'Guía' },
   { href: '/asistente', label: 'Asistente' },
+  { href: '/api-docs', label: 'API' },
 ];
 
 /** Desktop primary nav with an active-route highlight. */
