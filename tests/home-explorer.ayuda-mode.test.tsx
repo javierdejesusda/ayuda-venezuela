@@ -65,6 +65,9 @@ describe('HomeExplorer ayuda mode — default soloConPedidos filtering', () => {
       />,
     );
 
+    // The list is the default view; open the map to inspect its pins.
+    screen.getByRole('tab', { name: 'Mapa' }).click();
+
     // Default ayuda mode: map receives only the 1 zone with open needs.
     // findByTestId is needed because the dynamic MapView resolves asynchronously.
     const pinCount = await screen.findByTestId('map-pin-count');

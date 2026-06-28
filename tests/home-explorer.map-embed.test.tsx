@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomeExplorer } from '@/components/home-explorer';
@@ -38,7 +38,7 @@ function makeLocations(n: number): LocationWithNeeds[] {
   return Array.from({ length: n }, (_, i) => loc(`l${i + 1}`));
 }
 
-describe('HomeExplorer default map load', () => {
+describe('HomeExplorer default list load', () => {
   const fetchMock = vi.fn();
 
   beforeEach(() => {
@@ -51,7 +51,7 @@ describe('HomeExplorer default map load', () => {
     cleanup();
   });
 
-  it('renders every server-loaded map pin on mount without an uncached per-visitor fetch', async () => {
+  it('mounts the default list from embedded data without an uncached per-visitor fetch, and the embedded set still feeds the map', async () => {
     const full = makeLocations(PAGE_SIZE + 5); // 25 zones, more than one page
 
     render(
@@ -63,11 +63,19 @@ describe('HomeExplorer default map load', () => {
       />,
     );
 
-    // The map (default view) shows ALL pins from the embedded set...
+    // The list (default view) paints from the embedded first page with no mount fetch.
+    await act(async () => {});
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('map-pin-count')).toBeNull();
+
+    // Opening the map refreshes the full matching set; it shows every pin.
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: full, total: full.length, nextCursor: null }),
+    });
+    fireEvent.click(screen.getByRole('tab', { name: 'Mapa' }));
+
     const pinCount = await screen.findByTestId('map-pin-count');
     expect(pinCount.textContent).toBe(String(PAGE_SIZE + 5));
-
-    // ...and it did so without firing the old uncached all=true mount fetch.
-    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

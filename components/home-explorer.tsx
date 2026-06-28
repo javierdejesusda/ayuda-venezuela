@@ -63,9 +63,10 @@ const DEFAULT_AYUDA_FILTERS: LocationFilters = { soloConPedidos: true };
 /**
  * Client shell that filters zones and switches between the map and the list.
  *
- * Map:  renders the full server-loaded set embedded at ISR time, so the default
- *       view needs no per-visitor fetch. Filter changes refetch all matches.
- * List: bounded to PAGE_SIZE items; "Ver más" appends the next page.
+ * List: the default view, bounded to PAGE_SIZE items seeded from the embedded
+ *       set, so it needs no per-visitor fetch on mount; "Ver más" appends pages.
+ * Map:  renders the full server-loaded set embedded at ISR time; opening it
+ *       refreshes all matches. Filter changes in map view refetch all matches.
  *
  * Server-path filter changes are debounced 300 ms; the latest-wins monotonic
  * requestId guard ensures out-of-order responses are discarded.
@@ -111,7 +112,7 @@ export function HomeExplorer({
 
   const [mode, setMode] = useState<ExplorerMode>('ayuda');
   const [filters, setFilters] = useState<LocationFilters>(DEFAULT_AYUDA_FILTERS);
-  const [view, setView] = useState<HomeView>('mapa');
+  const [view, setView] = useState<HomeView>('lista');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [displayed, setDisplayed] = useState<LocationWithNeeds[]>(() => seeded.slice(0, PAGE_SIZE));
   const [total, setTotal] = useState(seeded.length);
@@ -127,7 +128,7 @@ export function HomeExplorer({
   // Debounce timer for server-path filter changes.
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Shadow of view state kept in a ref so callbacks never capture stale view.
-  const viewRef = useRef<HomeView>('mapa');
+  const viewRef = useRef<HomeView>('lista');
 
   /**
    * Shared fetch dispatcher: increments the request id, sets loading, calls

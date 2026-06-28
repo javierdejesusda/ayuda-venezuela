@@ -58,18 +58,18 @@ function makeLocations(n: number, override: Partial<LocationWithNeeds> = {}): Lo
 // ---------------------------------------------------------------------------
 
 describe('HomeExplorer critical-path JS', () => {
-  it('defaults to the map, painting the cheap skeleton on first load while deferring the heavy Leaflet chunk', () => {
+  it('defaults to the list, deferring the heavy Leaflet chunk until the map tab is opened', () => {
     const { container } = render(
       <HomeExplorer initialLocations={[loc('l1')]} initialTotal={1} states={['Carabobo']} />,
     );
 
-    // The map is the default view, so the cheap skeleton paints on first load...
-    expect(screen.getByTestId('map-skeleton')).toBeInTheDocument();
+    // The list is the default view, so no map skeleton paints on first load...
+    expect(screen.queryByTestId('map-skeleton')).toBeNull();
     expect(container.querySelector('.leaflet-container')).toBeNull();
 
-    // Switching to the list tab drops the map skeleton entirely.
-    fireEvent.click(screen.getByRole('tab', { name: 'Lista' }));
-    expect(screen.queryByTestId('map-skeleton')).toBeNull();
+    // Opening the map tab brings up the cheap skeleton while the Leaflet chunk loads.
+    fireEvent.click(screen.getByRole('tab', { name: 'Mapa' }));
+    expect(screen.getByTestId('map-skeleton')).toBeInTheDocument();
   });
 });
 
