@@ -47,3 +47,38 @@ describe('openApiToMarkdown', () => {
     expect(md).toContain('404');
   });
 });
+
+const mdAbs = openApiToMarkdown(openApiDocument, 'https://apoyovenezuela.com');
+
+describe('openApiToMarkdown self-contained output', () => {
+  it('embeds an absolute base URL and full endpoint URLs', () => {
+    expect(mdAbs).toContain('https://apoyovenezuela.com');
+    expect(mdAbs).toContain('https://apoyovenezuela.com/api/v1/zonas');
+  });
+
+  it('documents how to use the API (auth, pagination, error envelope)', () => {
+    expect(mdAbs.toLowerCase()).toContain('autenticacion');
+    expect(mdAbs).toContain('nextCursor');
+    expect(mdAbs).toContain('"error"');
+  });
+
+  it('shows a runnable curl example', () => {
+    expect(mdAbs).toContain('curl "https://apoyovenezuela.com/api/v1/zonas');
+  });
+
+  it('shows an example JSON response carrying the data envelope', () => {
+    expect(mdAbs).toContain('```json');
+    expect(mdAbs).toContain('"data"');
+  });
+
+  it('documents parameter defaults', () => {
+    expect(mdAbs).toContain('| Default |');
+  });
+
+  it('fully populates nested example values (no truncated nulls)', () => {
+    // Pedido lives nested inside Zona.pedidos; its example fields must resolve,
+    // not bottom out at null from a too-shallow recursion guard.
+    expect(mdAbs).not.toContain('"id": null');
+    expect(mdAbs).toContain('"categoria": "rescate"');
+  });
+});
