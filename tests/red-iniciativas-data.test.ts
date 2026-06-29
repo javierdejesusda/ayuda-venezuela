@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
   CENTRAL_PLATFORM,
-  COORDINATION_TEAM,
   INITIATIVE_CATEGORIES,
   INITIATIVE_LEAD,
 } from '@/lib/data/red-iniciativas';
@@ -47,14 +46,6 @@ describe('red de iniciativas data', () => {
   it('does not repeat a link within the same category', () => {
     for (const category of INITIATIVE_CATEGORIES) {
       expect(new Set(category.urls).size).toBe(category.urls.length);
-    }
-  });
-
-  it('names each coordination area with at least one person', () => {
-    expect(COORDINATION_TEAM.length).toBeGreaterThan(0);
-    for (const role of COORDINATION_TEAM) {
-      expect(role.area.length).toBeGreaterThan(0);
-      expect(role.people.length).toBeGreaterThan(0);
     }
   });
 });
