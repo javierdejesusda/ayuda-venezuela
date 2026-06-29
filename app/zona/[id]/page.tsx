@@ -16,6 +16,7 @@ import { PersonasAtrapadasBadge, StatusBadge } from '@/components/status-badges'
 import { ZoneTimeline } from '@/components/zone-timeline';
 import { AddNeedForm } from '@/components/add-need-form';
 import { NeedList } from '@/components/need-list';
+import { RequestRemovalForm } from '@/components/request-removal-form';
 import { ZonePhotoGallery } from '@/components/zone-photo-gallery';
 
 // ISR with 30-second revalidation. In-app writes call revalidatePath('/zona/<id>')
@@ -236,6 +237,10 @@ export default async function ZonaPage({ params }: Props) {
         <AddNeedForm locationId={location.id} />
 
         <NeedList needs={location.needs} locationId={location.id} />
+
+        <div className="border-t border-border pt-3">
+          <RequestRemovalForm locationId={location.id} />
+        </div>
       </div>
     </div>
   );

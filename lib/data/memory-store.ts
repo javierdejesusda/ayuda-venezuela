@@ -28,6 +28,8 @@ import type {
   LocationWithNeeds,
   NeedRecord,
   NeedStatus,
+  RemovalRequestRecord,
+  RequestRemovalInput,
 } from './types';
 import type { DataStore } from './store';
 
@@ -37,7 +39,16 @@ export interface MemorySeed {
   fundraisers?: Fundraiser[];
 }
 
-export function createMemoryStore(initial?: MemorySeed): DataStore {
+/**
+ * Demo/test store. Adds a test-only reader for the removal queue that the
+ * shared DataStore contract does not expose (the queue is service-role only on
+ * the real backend, so there is no anon SELECT path to mirror here).
+ */
+export interface MemoryDataStore extends DataStore {
+  getRemovalRequests(): RemovalRequestRecord[];
+}
+
+export function createMemoryStore(initial?: MemorySeed): MemoryDataStore {
   const locations: LocationRecord[] = initial
     ? [...initial.locations]
     : [...SEED.locations];
@@ -47,6 +58,8 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
     : [...SEED.fundraisers];
   // Tracks report submission timestamps (ms) per hashed key for rate limiting.
   const quotaHits = new Map<string, number[]>();
+  // Private moderation queue: requests to take a report down (never auto-deletes).
+  const removalRequests: RemovalRequestRecord[] = [];
 
   const compose = (): LocationWithNeeds[] =>
     locations.map((l) => withSummary(l, needs));
@@ -153,6 +166,22 @@ export function createMemoryStore(initial?: MemorySeed): DataStore {
       };
       fundraisers.unshift(record);
       return record;
+    },
+
+    async createRemovalRequest(input: RequestRemovalInput) {
+      // Mirrors the Supabase store contract (returns void). The generated id and
+      // timestamp stay internal; tests read the queue via getRemovalRequests.
+      removalRequests.push({
+        id: createId('solicitud'),
+        locationId: input.locationId,
+        motivo: input.motivo,
+        contacto: input.contacto,
+        createdAt: now(),
+      });
+    },
+
+    getRemovalRequests() {
+      return [...removalRequests];
     },
 
     async checkReportQuota(keyHash: string) {

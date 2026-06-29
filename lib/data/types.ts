@@ -259,6 +259,39 @@ export interface CreateFundraiserInput {
   organizador?: string;
 }
 
+/** Reason categories a person can choose when asking that a report be removed. */
+export const REMOVAL_REASONS = ['resuelto', 'duplicado', 'incorrecto', 'otro'] as const;
+export type RemovalReason = (typeof REMOVAL_REASONS)[number];
+
+/** Human-readable es_VE labels for each removal reason (kept >= 5 chars so the
+ *  composed motivo always satisfies the removal_requests length CHECK). */
+export const REMOVAL_REASON_LABELS: Record<RemovalReason, string> = {
+  resuelto: 'Ya fue atendido o resuelto',
+  duplicado: 'Es un duplicado de otro reporte',
+  incorrecto: 'La informacion es incorrecta',
+  otro: 'Otro motivo',
+};
+
+/** Input for queueing a public report-removal request. */
+export interface RequestRemovalInput {
+  locationId: string;
+  motivo: string;
+  contacto?: string;
+}
+
+/**
+ * A queued request to take a report down. Reviewed by the maintainer out of
+ * band; it never deletes anything by itself (deletion stays manual via
+ * `npm run delete-report`).
+ */
+export interface RemovalRequestRecord {
+  id: string;
+  locationId: string;
+  motivo: string;
+  contacto?: string;
+  createdAt: string;
+}
+
 // Zone clustering (secret infrastructure; see 20260630000000_zone_clustering.sql).
 
 /** A canonical cluster grouping co-located zone reports. */

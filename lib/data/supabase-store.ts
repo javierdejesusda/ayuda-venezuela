@@ -23,6 +23,7 @@ import type {
   NeedRecord,
   NeedStatus,
   PersonasAtrapadas,
+  RequestRemovalInput,
   Urgency,
   ZoneUpdate,
   ZoneUpdateKind,
@@ -327,6 +328,19 @@ export function createSupabaseStore(url: string, key: string): DataStore {
         throw error;
       }
       return toFundraiser(data as FundraiserRow);
+    },
+
+    async createRemovalRequest(input: RequestRemovalInput) {
+      // Insert-only: anon RLS allows INSERT but NO SELECT, so we must not request
+      // a representation. PostgREST applies the SELECT policy to RETURNING rows;
+      // with none, .select() would come back empty and .single() would throw even
+      // though the row was stored. The maintainer reads the queue via service_role.
+      const { error } = await client.from('removal_requests').insert({
+        location_id: input.locationId,
+        motivo: input.motivo,
+        contacto: input.contacto ?? null,
+      });
+      if (error) throw error;
     },
 
     async checkReportQuota(keyHash: string) {
