@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "delete-report": "node scripts/delete-report.mjs"
+    "delete-report": "node scripts/delete-report.mjs",
+    "import-redh": "node scripts/import-redh.mjs",
+    "rollback-redh": "node scripts/rollback-redh.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.2",
