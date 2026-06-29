@@ -41,6 +41,13 @@ create policy "removal_requests_insert_public"
   on public.removal_requests for insert
   with check (true);
 
+-- Belt-and-suspenders on top of RLS: strip the default SELECT/UPDATE/DELETE
+-- grants so the queue stays private even if a SELECT policy is ever added by
+-- mistake. INSERT stays granted (anon must still submit; the app inserts WITHOUT
+-- a representation, so no SELECT privilege is needed). Mirrors the private-table
+-- convention used by report_throttle / zone_clusters.
+revoke select, update, delete on public.removal_requests from anon, authenticated;
+
 -- Intentionally NOT added to the supabase_realtime publication. Realtime
 -- broadcasts every column of subscribed tables to all connected clients; the
 -- removal queue must stay private. (Mirrors report_throttle / zone_clusters.)

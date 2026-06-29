@@ -107,7 +107,8 @@ export function RequestRemovalForm({ locationId }: RequestRemovalFormProps): Rea
         onClick={() => (open ? handleClose() : setOpen(true))}
         aria-expanded={open}
         aria-controls={open ? 'rr-panel' : undefined}
-        className="inline-flex min-h-[44px] items-center rounded-lg px-1 py-1 text-sm text-ink-faint underline-offset-4 transition-colors duration-150 hover:text-ink-soft hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+        disabled={isPending}
+        className="inline-flex min-h-[44px] items-center rounded-lg px-1 py-1 text-sm text-ink-faint underline-offset-4 transition-colors duration-150 hover:text-ink-soft hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 disabled:opacity-50 disabled:pointer-events-none"
       >
         ¿Este reporte ya no aplica? Solicitar que se quite
       </button>

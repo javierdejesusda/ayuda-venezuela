@@ -75,4 +75,22 @@ describe('RequestRemovalForm', () => {
     expect(screen.queryByLabelText(/motivo/i)).not.toBeInTheDocument();
     expect(requestRemovalAction).not.toHaveBeenCalled();
   });
+
+  it('disables the disclosure trigger while a submit is pending', async () => {
+    let resolveAction: (value: { ok: true; data: undefined }) => void = () => {};
+    requestRemovalAction.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveAction = resolve;
+      }),
+    );
+    render(<RequestRemovalForm locationId="zona_test" />);
+    openForm();
+    const trigger = screen.getByRole('button', { name: /solicitar que se quite/i });
+    fireEvent.click(screen.getByRole('button', { name: /enviar solicitud/i }));
+
+    await waitFor(() => expect(trigger).toBeDisabled());
+
+    resolveAction({ ok: true, data: undefined });
+    expect(await screen.findByRole('status')).toBeInTheDocument();
+  });
 });
