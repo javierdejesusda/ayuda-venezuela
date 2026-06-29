@@ -15,7 +15,6 @@ import {
   Tent,
   Truck,
   UserSearch,
-  Users,
   Utensils,
   type LucideIcon,
 } from 'lucide-react';
@@ -24,7 +23,6 @@ import type { Metadata } from 'next';
 import { PageHeader } from '@/components/page-header';
 import {
   CENTRAL_PLATFORM,
-  COORDINATION_TEAM,
   INITIATIVE_CATEGORIES,
   INITIATIVE_LEAD,
 } from '@/lib/data/red-iniciativas';
@@ -191,29 +189,6 @@ export default function RedIniciativasPage() {
             </div>
           );
         })}
-      </section>
-
-      <section aria-labelledby="equipo-heading">
-        <SectionHeader
-          icon={Users}
-          title="Equipo coordinador"
-          description="Las personas que sostienen la infraestructura compartida de la red."
-          id="equipo-heading"
-          tone="neutral"
-          level="h2"
-        />
-        <Card>
-          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-            {COORDINATION_TEAM.map((role) => (
-              <div key={role.area} className="flex flex-col">
-                <dt className="text-xs font-medium uppercase tracking-wide text-ink-faint">
-                  {role.area}
-                </dt>
-                <dd className="text-sm text-ink">{role.people.join(', ')}</dd>
-              </div>
-            ))}
-          </dl>
-        </Card>
       </section>
 
       <section aria-label="Nota de cierre">

@@ -20,12 +20,6 @@ export interface InitiativeCategory {
   urls: string[];
 }
 
-/** An organizing area of the coordination team and the people leading it. */
-export interface CoordinationRole {
-  area: string;
-  people: string[];
-}
-
 /** Person credited as the lead organizer of the network. */
 export const INITIATIVE_LEAD = 'Alberto Perdomo';
 
@@ -150,21 +144,4 @@ export const INITIATIVE_CATEGORIES: InitiativeCategory[] = [
     description: 'Accede a atención médica y acompañamiento psicológico.',
     urls: ['https://www.nueveonce.com', 'https://venemergencia.com'],
   },
-];
-
-/**
- * Coordination team behind the central platform, organized by area. Credited
- * with their consent as the people sustaining the shared infrastructure.
- */
-export const COORDINATION_TEAM: CoordinationRole[] = [
-  { area: 'Coordinación general', people: ['Ángel Rodríguez', 'Alberto Perdomo'] },
-  { area: 'Rieles / Pagos', people: ['Antonio Aspite'] },
-  { area: 'Meru (cripto y exchanges)', people: ['Amílcar Erazu'] },
-  { area: 'Frontend', people: ['Enmanuel Olachea'] },
-  { area: 'Backend / APIs', people: ['María Muñoz', 'Ángel Padrino', 'Jesús Ortiz'] },
-  { area: 'Seguridad', people: ['Jesús Ortiz'] },
-  { area: 'Diseño', people: ['Víctor Velásquez'] },
-  { area: 'Proyecto', people: ['Samantha Bravo'] },
-  { area: 'QA', people: ['Simoneth Gómez'] },
-  { area: 'Marketing y comunicaciones', people: ['Kevin Hernández', 'Rafael Oviedo'] },
 ];
