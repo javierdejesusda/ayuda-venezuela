@@ -48,10 +48,23 @@ function clampDescripcion(text) {
   return trimmed.length > MAX_DESCRIPCION ? trimmed.slice(0, MAX_DESCRIPCION) : trimmed;
 }
 
-function parseCoord(value) {
-  if (value == null) return null;
-  const n = parseFloat(String(value));
-  return Number.isFinite(n) ? n : null;
+/**
+ * Parse and range-validate a latitude/longitude pair. Returns both as null
+ * when either is missing, non-numeric, or outside the valid geographic range,
+ * so a bad upstream coordinate is treated as missing instead of an off-map pin.
+ */
+function sanitizeCoords(rawLat, rawLng) {
+  if (rawLat == null || rawLng == null) return { lat: null, lng: null };
+  const lat = parseFloat(String(rawLat));
+  const lng = parseFloat(String(rawLng));
+  const ok =
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180;
+  return ok ? { lat, lng } : { lat: null, lng: null };
 }
 
 /** Lowercase, strip combining diacritics, collapse whitespace - for tolerant matching. */
@@ -179,6 +192,7 @@ export function mapInstitution(row) {
 
   const rawPhone = cleanPhone(row?.public_phone);
   const contactoTelefono = rawPhone || undefined;
+  const { lat, lng } = sanitizeCoords(row?.latitude, row?.longitude);
 
   return {
     location: {
@@ -190,8 +204,8 @@ export function mapInstitution(row) {
       descripcion: buildInstitutionDescripcion(row),
       contactoNombre: undefined,
       contactoTelefono,
-      lat: parseCoord(row?.latitude),
-      lng: parseCoord(row?.longitude),
+      lat,
+      lng,
       fotos: [],
     },
     sourceRef: institutionSourceRef(row?.uuid),
@@ -206,6 +220,8 @@ export function mapShelter(row) {
   const estado = normalizeEstado(row?.state);
   if (!estado) return null;
 
+  const { lat, lng } = sanitizeCoords(row?.latitude, row?.longitude);
+
   return {
     location: {
       nombre: clampNombre(row?.name),
@@ -216,8 +232,8 @@ export function mapShelter(row) {
       descripcion: undefined,
       contactoNombre: undefined,
       contactoTelefono: undefined,
-      lat: parseCoord(row?.latitude),
-      lng: parseCoord(row?.longitude),
+      lat,
+      lng,
       fotos: [],
     },
     need: {

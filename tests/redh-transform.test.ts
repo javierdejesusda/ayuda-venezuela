@@ -157,6 +157,24 @@ describe('mapInstitution', () => {
     expect(out!.location.lng).toBeNull();
   });
 
+  it('treats out-of-range coordinates as missing (null) to avoid off-map pins', () => {
+    const badLat = mapInstitution({ ...INSTITUTION_FIXTURE, latitude: '91', longitude: '-66' });
+    expect(badLat!.location.lat).toBeNull();
+    expect(badLat!.location.lng).toBeNull();
+
+    const badLng = mapInstitution({ ...INSTITUTION_FIXTURE, latitude: '10', longitude: '181' });
+    expect(badLng!.location.lat).toBeNull();
+    expect(badLng!.location.lng).toBeNull();
+
+    const negOutOfRange = mapInstitution({
+      ...INSTITUTION_FIXTURE,
+      latitude: '-91',
+      longitude: '-181',
+    });
+    expect(negOutOfRange!.location.lat).toBeNull();
+    expect(negOutOfRange!.location.lng).toBeNull();
+  });
+
   it('produces empty fotos array and no contactoNombre', () => {
     const out = mapInstitution(INSTITUTION_FIXTURE);
     expect(out!.location.fotos).toEqual([]);
@@ -222,6 +240,12 @@ describe('mapShelter', () => {
     const out = mapShelter(SHELTER_FIXTURE);
     expect(out!.location.lat).toBeCloseTo(10.5146988);
     expect(out!.location.lng).toBeCloseTo(-66.8963917);
+  });
+
+  it('treats out-of-range coordinates as missing (null)', () => {
+    const out = mapShelter({ ...SHELTER_FIXTURE, latitude: '200', longitude: '-66' });
+    expect(out!.location.lat).toBeNull();
+    expect(out!.location.lng).toBeNull();
   });
 
   it('returns null when the state cannot be mapped', () => {

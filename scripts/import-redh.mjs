@@ -179,13 +179,14 @@ async function main() {
   console.error('Fetching shelters...');
   const allShelters = await fetchAll('shelters', 'shelters');
 
-  const end = args.limit != null ? args.offset + args.limit : allInstitutions.length;
-  const institutions = allInstitutions.slice(args.offset, end);
-  const shelters = allShelters;
+  const sliceByArgs = (rows) =>
+    args.limit != null ? rows.slice(args.offset, args.offset + args.limit) : rows.slice(args.offset);
+  const institutions = sliceByArgs(allInstitutions);
+  const shelters = sliceByArgs(allShelters);
 
   console.error(
-    `Institutions: ${institutions.length} (offset ${args.offset}, limit ${args.limit ?? 'all'})` +
-      `; Shelters: ${shelters.length} (all)${args.dryRun ? ' [DRY RUN]' : ''}`,
+    `Institutions: ${institutions.length}; Shelters: ${shelters.length} ` +
+      `(offset ${args.offset}, limit ${args.limit ?? 'all'})${args.dryRun ? ' [DRY RUN]' : ''}`,
   );
 
   const summary = {
