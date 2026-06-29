@@ -20,12 +20,15 @@
  *   node --env-file=.env.local scripts/import-redh.mjs --limit 5 --dry-run
  *   node --env-file=.env.local scripts/import-redh.mjs
  */
+import { argv } from 'node:process';
+import { pathToFileURL } from 'node:url';
+
 import { createClient } from '@supabase/supabase-js';
 
 import { mapInstitution, mapShelter } from './redh-transform.mjs';
 
 const API_BASE = 'https://api-redh.avapre.com/api/v1';
-const PAGE_SIZE = 200;
+export const PAGE_SIZE = 200;
 const PAGE_DELAY_MS = 500;
 
 function parseArgs(argv) {
@@ -59,19 +62,24 @@ async function fetchJson(path) {
 
 /**
  * Page through a paginated endpoint and return all rows.
- * The API wraps each response in { data: { <key>: [...] }, meta: { pagination } }.
- * When meta.pagination is absent or has_more is falsy, we stop paging.
+ * The API wraps each response in { data: { <key>: [...] }, meta: {...} } but the
+ * live API returns an empty meta object, so we cannot rely on a pagination flag.
+ * Termination is driven off the returned page size: a short (or empty) page is
+ * the last one. `meta.pagination.has_more === false` is honored as an optional
+ * early stop when present, but is never the sole termination condition.
+ *
+ * `fetchImpl` is injectable so the loop can be unit tested without the network.
  */
-async function fetchAll(resource, key) {
+export async function fetchAll(resource, key, fetchImpl = fetchJson) {
   const rows = [];
   let offset = 0;
   while (true) {
-    const body = await fetchJson(`/${resource}?limit=${PAGE_SIZE}&offset=${offset}`);
+    const body = await fetchImpl(`/${resource}?limit=${PAGE_SIZE}&offset=${offset}`);
     const page = body?.data?.[key] ?? [];
     rows.push(...page);
-    const hasMore = body?.meta?.pagination?.has_more;
-    if (!hasMore || page.length === 0) break;
     offset += page.length;
+    if (page.length < PAGE_SIZE) break;
+    if (body?.meta?.pagination?.has_more === false) break;
     await new Promise((r) => setTimeout(r, PAGE_DELAY_MS));
   }
   return rows;
@@ -273,7 +281,10 @@ async function main() {
   console.log(JSON.stringify(summary));
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const isEntryPoint = argv[1] && import.meta.url === pathToFileURL(argv[1]).href;
+if (isEntryPoint) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
