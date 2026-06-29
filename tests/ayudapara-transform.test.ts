@@ -261,8 +261,29 @@ describe('cleanPhone', () => {
   });
 
   it('strips unicode bidi and control characters', () => {
-    const withBidi = '+58‏424-1234567‪';
+    const rlm = String.fromCodePoint(0x200f);
+    const lre = String.fromCodePoint(0x202a);
+    const withBidi = `+58${rlm}424-1234567${lre}`;
     expect(cleanPhone(withBidi)).toBe('+58424-1234567');
+  });
+
+  it('strips the arabic letter mark (U+061C)', () => {
+    const alm = String.fromCodePoint(0x061c);
+    expect(cleanPhone(`+58${alm}424-1234567`)).toBe('+58424-1234567');
+  });
+
+  it('strips bidi isolates (U+2066-U+2069)', () => {
+    const lri = String.fromCodePoint(0x2066);
+    const rli = String.fromCodePoint(0x2067);
+    const fsi = String.fromCodePoint(0x2068);
+    const pdi = String.fromCodePoint(0x2069);
+    expect(cleanPhone(`${lri}+58${rli}424${fsi}-1234567${pdi}`)).toBe('+58424-1234567');
+  });
+
+  it('strips a NUL byte and other C0 controls', () => {
+    const nul = String.fromCodePoint(0x0000);
+    const bom = String.fromCodePoint(0xfeff);
+    expect(cleanPhone(`+58${nul}424${bom}-1234567`)).toBe('+58424-1234567');
   });
 
   it('returns null when phone is null', () => {
