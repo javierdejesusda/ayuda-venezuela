@@ -3,7 +3,12 @@ import Link from 'next/link';
 import { ChevronRight, MapPin } from 'lucide-react';
 
 import { PhotoCarousel } from '@/components/photo-carousel';
-import { CategoryChip, PersonasAtrapadasBadge, StatusBadge } from '@/components/status-badges';
+import {
+  CategoryChip,
+  PersonasAtrapadasBadge,
+  StatusBadge,
+  VoluntariosBadge,
+} from '@/components/status-badges';
 import { ZonePhoto } from '@/components/zone-photo';
 import type { ExplorerMode, LocationWithNeeds } from '@/lib/data/types';
 import { statusMeta } from '@/lib/status';
@@ -73,6 +78,12 @@ export function LocationCard({
             <StatusBadge status={location.status} size="sm" />
           )}
         </div>
+
+        {location.acepta_voluntarios && (
+          <div className="mt-2">
+            <VoluntariosBadge />
+          </div>
+        )}
 
         {!isAyuda && location.personas_atrapadas === 'si' && (
           <div className="mt-2">

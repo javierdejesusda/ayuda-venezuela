@@ -78,6 +78,7 @@ export interface PublicZona {
   ubicacion: PublicUbicacion | null;
   status: EmergencyStatus;
   personasAtrapadas: PersonasAtrapadas;
+  aceptaVoluntarios: boolean;
   fuenteReporte: FuenteReporte | null;
   tipoConstruccion: string | null;
   descripcion?: string;
@@ -179,6 +180,7 @@ export function toPublicZona(loc: LocationWithNeeds, includeContacto = false): P
     ubicacion: toUbicacion(loc.lat, loc.lng),
     status: loc.status,
     personasAtrapadas: loc.personas_atrapadas ?? PERSONAS_ATRAPADAS_DEFAULT,
+    aceptaVoluntarios: loc.acepta_voluntarios ?? false,
     fuenteReporte: loc.fuente_reporte ?? null,
     tipoConstruccion: loc.tipo_construccion ?? null,
     fotos: loc.fotos ?? [],

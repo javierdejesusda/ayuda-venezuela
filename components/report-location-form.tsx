@@ -139,6 +139,7 @@ export default function ReportLocationForm(): React.JSX.Element {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [fotos, setFotos] = useState<SelectedFoto[]>([]);
   const [fotoError, setFotoError] = useState<string | null>(null);
+  const [aceptaVoluntarios, setAceptaVoluntarios] = useState(false);
 
   // Revoke any object URLs still held when the form unmounts to avoid leaks.
   useRevokeObjectUrlsOnUnmount(fotos.map((foto) => foto.previewUrl));
@@ -291,6 +292,7 @@ export default function ReportLocationForm(): React.JSX.Element {
         zona: values.zona.trim() || undefined,
         status: values.status,
         personas_atrapadas: values.personas_atrapadas,
+        acepta_voluntarios: aceptaVoluntarios,
         fuente_reporte: values.fuente_reporte || undefined,
         tipo_construccion: values.tipo_construccion.trim() || undefined,
         descripcion: values.descripcion.trim() || undefined,
@@ -556,6 +558,28 @@ export default function ReportLocationForm(): React.JSX.Element {
           disabled={isPending}
         />
       </Field>
+
+      {/* Acepta voluntarios (opcional) */}
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-ink">Voluntarios</legend>
+        <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-border-strong bg-surface px-4 py-3 transition-colors hover:border-brand-500 aria-disabled:opacity-50">
+          <input
+            type="checkbox"
+            name="acepta_voluntarios"
+            checked={aceptaVoluntarios}
+            onChange={(e) => setAceptaVoluntarios(e.target.checked)}
+            disabled={isPending}
+            className="mt-0.5 size-4 accent-brand-600"
+          />
+          <span className="text-sm">
+            <span className="font-medium text-ink">Este lugar recibe voluntarios</span>
+            <span className="mt-0.5 block text-xs text-ink-faint">
+              Opcional. Marca esta opción si el lugar acepta personas que quieran ayudar
+              de forma presencial.
+            </span>
+          </span>
+        </label>
+      </fieldset>
 
       {/* Descripcion (opcional) */}
       <Field

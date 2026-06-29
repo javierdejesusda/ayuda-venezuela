@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Siren } from 'lucide-react';
+import { HeartHandshake, Siren } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import type {
@@ -79,6 +79,15 @@ export function CategoryChip({
   return (
     <Badge tone={m.tone} icon={m.icon} size={size}>
       {m.label}
+    </Badge>
+  );
+}
+
+/** Positive signal shown on a location that accepts volunteers. */
+export function VoluntariosBadge({ size = 'sm' }: { size?: BadgeSize }) {
+  return (
+    <Badge tone="success" icon={HeartHandshake} size={size}>
+      Acepta voluntarios
     </Badge>
   );
 }

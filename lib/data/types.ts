@@ -107,6 +107,9 @@ export interface LocationRecord {
   status: EmergencyStatus;
   /** Whether trapped persons are reported; absent/null treated as 'no_se' by consumers. */
   personas_atrapadas?: PersonasAtrapadas;
+  /** Whether this location accepts volunteers; absent treated as false (the
+   *  store always sets it, mirroring personas_atrapadas/fuente_reporte). */
+  acepta_voluntarios?: boolean;
   /** Source channel for this report; null when not specified. */
   fuente_reporte?: FuenteReporte | null;
   /** Construction type of the affected structure; null when not specified. */
@@ -157,6 +160,8 @@ export interface CreateLocationInput {
   accuracyM?: number | null;
   status: EmergencyStatus;
   personas_atrapadas?: PersonasAtrapadas;
+  /** Whether this location accepts volunteers; absent treated as false. */
+  acepta_voluntarios?: boolean;
   fuente_reporte?: FuenteReporte | null;
   tipo_construccion?: string | null;
   descripcion?: string;
@@ -205,6 +210,8 @@ export interface LocationFilters {
   texto?: string;
   /** Ayuda mode: exclude zones with no open (pendiente or en_camino) needs. */
   soloConPedidos?: boolean;
+  /** Keep only locations flagged as accepting volunteers. */
+  soloVoluntarios?: boolean;
 }
 
 /** Default number of locations per page for the bounded home list. */
