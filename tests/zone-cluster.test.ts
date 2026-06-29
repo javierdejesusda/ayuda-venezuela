@@ -49,6 +49,9 @@ function stubStore(getClusterForLocation: DataStore['getClusterForLocation']): D
     createFundraiser: async () => {
       throw new Error('not implemented');
     },
+    createRemovalRequest: async () => {
+      throw new Error('not implemented');
+    },
     checkReportQuota: async () => true,
     getClusterForLocation,
   };

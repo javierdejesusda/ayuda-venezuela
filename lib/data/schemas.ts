@@ -14,6 +14,8 @@ import {
   NEED_STATUSES,
   PERSONAS_ATRAPADAS,
   PERSONAS_ATRAPADAS_DEFAULT,
+  REMOVAL_REASONS,
+  REMOVAL_REASON_LABELS,
   URGENCIES,
 } from './types';
 
@@ -124,6 +126,32 @@ export const createFundraiserSchema = z.object({
   organizador: optionalText(80),
 });
 
+export const removalReasonSchema = z.enum(REMOVAL_REASONS);
+
+/**
+ * Validates a public report-removal request and composes the optional free-form
+ * detail into a single stored `motivo` string. The reason label guarantees the
+ * stored motivo always lands within the 5..500 length the removal_requests
+ * CHECK enforces, even when no detail is supplied. locationId is validated as a
+ * non-empty string (not a strict uuid) to mirror createNeedSchema so demo-mode
+ * ids like `zona_xxx` still work; the DB column + FK enforce uuid shape in prod.
+ */
+export const requestRemovalSchema = z
+  .object({
+    locationId: z.string().trim().min(1),
+    motivo: removalReasonSchema,
+    detalle: optionalText(400),
+    contacto: optionalText(120),
+  })
+  .transform((values) => ({
+    locationId: values.locationId,
+    motivo: values.detalle
+      ? `${REMOVAL_REASON_LABELS[values.motivo]}: ${values.detalle}`
+      : REMOVAL_REASON_LABELS[values.motivo],
+    contacto: values.contacto,
+  }));
+
 export type CreateLocationValues = z.infer<typeof createLocationSchema>;
 export type CreateNeedValues = z.infer<typeof createNeedSchema>;
 export type CreateFundraiserValues = z.infer<typeof createFundraiserSchema>;
+export type RequestRemovalValues = z.infer<typeof requestRemovalSchema>;

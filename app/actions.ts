@@ -11,6 +11,7 @@ import {
   createFundraiserSchema,
   createLocationSchema,
   createNeedSchema,
+  requestRemovalSchema,
   updateLocationStatusSchema,
   updateNeedStatusSchema,
 } from '@/lib/data/schemas';
@@ -29,6 +30,30 @@ function fieldErrors(error: z.ZodError): Record<string, string> {
   return out;
 }
 
+/**
+ * Shared rate-limit gate for anonymous writes. Hashes the caller IP with a
+ * server-side salt (no raw IP is ever stored) and checks the sliding-window
+ * quota. Requires BOTH a non-empty IP and a non-empty THROTTLE_SALT; either
+ * missing skips the gate (fail-open) so no unsalted hash is persisted and
+ * legitimate emergency submissions are never blocked on misconfiguration or a
+ * throttle-layer outage.
+ */
+async function withinWriteQuota(): Promise<boolean> {
+  try {
+    const h = await headers();
+    const fwd = h.get('x-forwarded-for') ?? '';
+    const ip = fwd.split(',')[0]?.trim() ?? '';
+    const salt = process.env.THROTTLE_SALT;
+    if (ip && salt) {
+      const keyHash = createHash('sha256').update(salt + ip).digest('hex');
+      return await getStore().checkReportQuota(keyHash);
+    }
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 export async function createLocationAction(
   input: unknown,
 ): Promise<ActionResult<{ id: string }>> {
@@ -41,27 +66,11 @@ export async function createLocationAction(
     };
   }
 
-  // Rate-limit check: hash the caller IP with a server-side salt so no raw IP
-  // is ever stored. Requires BOTH a non-empty IP and a non-empty THROTTLE_SALT;
-  // either missing means the gate is skipped (fail-open) so no unsalted hash
-  // is persisted and legitimate reporters are never blocked on misconfiguration.
-  try {
-    const h = await headers();
-    const fwd = h.get('x-forwarded-for') ?? '';
-    const ip = fwd.split(',')[0]?.trim() ?? '';
-    const salt = process.env.THROTTLE_SALT;
-    if (ip && salt) {
-      const keyHash = createHash('sha256').update(salt + ip).digest('hex');
-      const allowed = await getStore().checkReportQuota(keyHash);
-      if (!allowed) {
-        return {
-          ok: false,
-          error: 'Estás enviando reportes muy rápido. Espera un momento e intenta de nuevo.',
-        };
-      }
-    }
-  } catch {
-    // Fail-open: proceed with the report on any throttle-layer error.
+  if (!(await withinWriteQuota())) {
+    return {
+      ok: false,
+      error: 'Estás enviando reportes muy rápido. Espera un momento e intenta de nuevo.',
+    };
   }
 
   try {
@@ -139,6 +148,34 @@ export async function updateNeedStatusAction(input: {
     return { ok: true, data: undefined };
   } catch {
     return { ok: false, error: 'No se pudo actualizar.' };
+  }
+}
+
+export async function requestRemovalAction(
+  input: unknown,
+): Promise<ActionResult> {
+  const parsed = requestRemovalSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: 'Revisa los datos del formulario.',
+      fieldErrors: fieldErrors(parsed.error),
+    };
+  }
+
+  if (!(await withinWriteQuota())) {
+    return {
+      ok: false,
+      error: 'Estás enviando solicitudes muy rápido. Espera un momento e intenta de nuevo.',
+    };
+  }
+
+  try {
+    // No revalidatePath: the queue is private, nothing visible changes.
+    await getStore().createRemovalRequest(parsed.data);
+    return { ok: true, data: undefined };
+  } catch {
+    return { ok: false, error: 'No se pudo enviar la solicitud. Intenta de nuevo.' };
   }
 }
 
