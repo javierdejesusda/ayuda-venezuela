@@ -69,6 +69,7 @@ export const createLocationSchema = z.object({
   accuracyM: z.number().nonnegative().nullable().optional(),
   status: emergencyStatusSchema,
   personas_atrapadas: personasAtrapadasSchema,
+  acepta_voluntarios: z.boolean().default(false),
   fuente_reporte: fuenteReporteSchema,
   tipo_construccion: optionalText(200),
   descripcion: optionalText(1000),

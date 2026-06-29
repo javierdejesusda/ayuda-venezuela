@@ -281,3 +281,31 @@ describe('GET /api/zonas soloConPedidos filter', () => {
     );
   });
 });
+
+describe('GET /api/zonas soloVoluntarios filter', () => {
+  it('passes soloVoluntarios:true to the store when param is "true"', async () => {
+    mockListLocationsPage.mockResolvedValue({ items: [], total: 0 });
+
+    const req = new Request('http://localhost/api/zonas?soloVoluntarios=true');
+    await GET(req);
+
+    expect(mockListLocationsPage).toHaveBeenCalledWith(
+      expect.objectContaining({ soloVoluntarios: true }),
+      0,
+      20,
+    );
+  });
+
+  it('does not set soloVoluntarios when param is absent', async () => {
+    mockListLocationsPage.mockResolvedValue({ items: [], total: 0 });
+
+    const req = new Request('http://localhost/api/zonas');
+    await GET(req);
+
+    expect(mockListLocationsPage).toHaveBeenCalledWith(
+      expect.not.objectContaining({ soloVoluntarios: expect.anything() }),
+      0,
+      20,
+    );
+  });
+});

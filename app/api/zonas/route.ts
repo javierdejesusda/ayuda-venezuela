@@ -37,6 +37,7 @@ export async function GET(request: Request): Promise<Response> {
   }
   if (texto) filters.texto = texto;
   if (searchParams.get('soloConPedidos') === 'true') filters.soloConPedidos = true;
+  if (searchParams.get('soloVoluntarios') === 'true') filters.soloVoluntarios = true;
 
   // all=true: map surface needs every matching zone; Infinity tells the store
   // to skip slicing. Paginated mode uses the cursor offset and PAGE_SIZE limit.

@@ -372,6 +372,21 @@ describe('mapCenter - location shape', () => {
     const result = mapCenter(CENTER_VE)!;
     expect(result.location.descripcion).not.toContain('Acepta voluntarios.');
   });
+
+  it('sets acepta_voluntarios true when source accepts_volunteers is true', () => {
+    const result = mapCenter(CENTER_VE_VOLUNTEERS)!;
+    expect(result.location.acepta_voluntarios).toBe(true);
+  });
+
+  it('sets acepta_voluntarios false when source accepts_volunteers is false', () => {
+    const result = mapCenter(CENTER_VE)!;
+    expect(result.location.acepta_voluntarios).toBe(false);
+  });
+
+  it('sets acepta_voluntarios false when accepts_volunteers is absent', () => {
+    const result = mapCenter({ ...CENTER_VE, accepts_volunteers: undefined })!;
+    expect(result.location.acepta_voluntarios).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -501,5 +516,10 @@ describe('mapHelpPoint - location shape', () => {
 
   it('returns null when state cannot be mapped to a VE state', () => {
     expect(mapHelpPoint({ ...HELP_POINT_BASIC, state: 'UnknownState' })).toBeNull();
+  });
+
+  it('sets acepta_voluntarios false (help points have no volunteer flag)', () => {
+    const result = mapHelpPoint(HELP_POINT_FULL)!;
+    expect(result.location.acepta_voluntarios).toBe(false);
   });
 });

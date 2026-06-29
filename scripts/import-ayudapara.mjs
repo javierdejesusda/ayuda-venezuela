@@ -86,6 +86,7 @@ async function upsertLocation(supabase, location, sourceRef, { dryRun }) {
       lng: location.lng,
       accuracy_m: null,
       status: location.status,
+      acepta_voluntarios: location.acepta_voluntarios ?? false,
       descripcion: location.descripcion ?? null,
       contacto_nombre: location.contactoNombre ?? null,
       contacto_telefono: location.contactoTelefono ?? null,

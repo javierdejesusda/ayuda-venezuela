@@ -33,6 +33,7 @@ describe('openApiToMarkdown', () => {
     expect(md).toContain('## Esquemas');
     expect(md).toContain('### Zona');
     expect(md).toContain('personasAtrapadas');
+    expect(md).toContain('aceptaVoluntarios');
   });
 
   it('expands enum values from the domain constants', () => {

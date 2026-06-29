@@ -202,6 +202,74 @@ describe('supabase store createLocation', () => {
     expect(result.id).toBe('loc_1');
   });
 
+  it('inserts acepta_voluntarios true and maps it from the returned row', async () => {
+    const rowWithFlag = { ...LOCATION_ROW, acepta_voluntarios: true };
+    const single = vi.fn().mockResolvedValue({ data: rowWithFlag, error: null });
+    const select = vi.fn(() => ({ single }));
+    const insert = vi.fn(() => ({ select }));
+    from.mockReturnValue({ insert });
+
+    const result = await makeStore().createLocation({
+      nombre: 'Centro de Acopio',
+      estado: 'Carabobo',
+      ciudad: 'Valencia',
+      status: 'estable',
+      acepta_voluntarios: true,
+    });
+
+    const payload = (insert.mock.calls[0] as unknown as [Record<string, unknown>])[0];
+    expect(payload.acepta_voluntarios).toBe(true);
+    expect(result.acepta_voluntarios).toBe(true);
+  });
+
+  it('defaults acepta_voluntarios to false when absent (payload and mapped row)', async () => {
+    const single = vi.fn().mockResolvedValue({ data: { ...LOCATION_ROW }, error: null });
+    const select = vi.fn(() => ({ single }));
+    const insert = vi.fn(() => ({ select }));
+    from.mockReturnValue({ insert });
+
+    const result = await makeStore().createLocation({
+      nombre: 'Zona',
+      estado: 'Carabobo',
+      ciudad: 'Valencia',
+      status: 'dano_parcial',
+    });
+
+    const payload = (insert.mock.calls[0] as unknown as [Record<string, unknown>])[0];
+    expect(payload.acepta_voluntarios).toBe(false);
+    expect(result.acepta_voluntarios).toBe(false);
+  });
+
+  it('retries without acepta_voluntarios when that column is missing from the database', async () => {
+    const missingError = {
+      message: 'column "acepta_voluntarios" of relation "locations" does not exist',
+    };
+    const single = vi
+      .fn()
+      .mockResolvedValueOnce({ data: null, error: missingError })
+      .mockResolvedValue({ data: { ...LOCATION_ROW }, error: null });
+    const select = vi.fn(() => ({ single }));
+    const insert = vi.fn(() => ({ select }));
+    from.mockReturnValue({ insert });
+
+    const result = await makeStore().createLocation({
+      nombre: 'Zona',
+      estado: 'Carabobo',
+      ciudad: 'Valencia',
+      status: 'dano_parcial',
+      acepta_voluntarios: true,
+    });
+
+    expect(insert).toHaveBeenCalledTimes(2);
+    const retryPayload = (insert.mock.calls[1] as unknown as [Record<string, unknown>])[0];
+    expect(retryPayload.acepta_voluntarios).toBeUndefined();
+    expect(result.id).toBe('loc_1');
+    // Graceful degradation: the stripped insert means the un-migrated row comes
+    // back without the column, so the citizen's true choice maps to false until
+    // the migration is applied. This is the accepted trade-off for prod lag.
+    expect(result.acepta_voluntarios).toBe(false);
+  });
+
   it('maps fuente_reporte and tipo_construccion from the returned row', async () => {
     const rowWithMeta = {
       ...LOCATION_ROW,

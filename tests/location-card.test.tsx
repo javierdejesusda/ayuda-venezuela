@@ -162,4 +162,19 @@ describe('LocationCard', () => {
       '/zona/loc_1',
     );
   });
+
+  it('shows the "Acepta voluntarios" badge when acepta_voluntarios is true', () => {
+    render(<LocationCard location={makeLocation({ acepta_voluntarios: true })} />);
+    expect(screen.getByText('Acepta voluntarios')).toBeInTheDocument();
+  });
+
+  it('does not show the volunteer badge when acepta_voluntarios is false', () => {
+    render(<LocationCard location={makeLocation({ acepta_voluntarios: false })} />);
+    expect(screen.queryByText('Acepta voluntarios')).toBeNull();
+  });
+
+  it('does not show the volunteer badge when acepta_voluntarios is absent', () => {
+    render(<LocationCard location={makeLocation({ acepta_voluntarios: undefined })} />);
+    expect(screen.queryByText('Acepta voluntarios')).toBeNull();
+  });
 });

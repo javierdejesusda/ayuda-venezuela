@@ -48,6 +48,8 @@ interface LocationRow {
   // Optional so rows from databases without the report-metadata migration still work.
   fuente_reporte?: string | null;
   tipo_construccion?: string | null;
+  // Optional so rows from databases without the acepta_voluntarios migration still work.
+  acepta_voluntarios?: boolean | null;
   status: string;
   descripcion: string | null;
   contacto_nombre: string | null;
@@ -112,6 +114,7 @@ export function toLocation(r: LocationRow): LocationRecord {
     accuracyM: r.accuracy_m ?? null,
     status: r.status as EmergencyStatus,
     personas_atrapadas: (r.personas_atrapadas as PersonasAtrapadas) ?? PERSONAS_ATRAPADAS_DEFAULT,
+    acepta_voluntarios: r.acepta_voluntarios ?? false,
     fuente_reporte: (r.fuente_reporte as FuenteReporte) ?? null,
     tipo_construccion: r.tipo_construccion ?? null,
     descripcion: r.descripcion ?? undefined,
@@ -231,6 +234,7 @@ export function createSupabaseStore(url: string, key: string): DataStore {
         fotos: input.fotos ?? [],
         accuracy_m: input.accuracyM ?? null,
         personas_atrapadas: input.personas_atrapadas ?? PERSONAS_ATRAPADAS_DEFAULT,
+        acepta_voluntarios: input.acepta_voluntarios ?? false,
         fuente_reporte: input.fuente_reporte ?? null,
         tipo_construccion: input.tipo_construccion ?? null,
       };

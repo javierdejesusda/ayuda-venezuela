@@ -42,6 +42,7 @@ export function matchesFilters(loc: LocationWithNeeds, f: LocationFilters): bool
   if (f.categoria && !loc.needs.some((n) => n.categoria === f.categoria)) return false;
   if (f.urgencia && !loc.needs.some((n) => n.urgencia === f.urgencia && n.status !== 'cubierto')) return false;
   if (f.soloConPedidos && (loc.summary.pendientes + loc.summary.enCamino) === 0) return false;
+  if (f.soloVoluntarios && loc.acepta_voluntarios !== true) return false;
   if (f.texto) {
     const q = f.texto.trim().toLowerCase();
     if (q) {

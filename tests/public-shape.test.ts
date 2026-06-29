@@ -134,6 +134,16 @@ describe('toPublicZona', () => {
     expect(z.personasAtrapadas).toBe('no_se');
   });
 
+  it('maps acepta_voluntarios to aceptaVoluntarios', () => {
+    const z = toPublicZona(loc({ acepta_voluntarios: true }));
+    expect(z.aceptaVoluntarios).toBe(true);
+  });
+
+  it('defaults aceptaVoluntarios to false when absent', () => {
+    const z = toPublicZona(loc({ acepta_voluntarios: undefined }));
+    expect(z.aceptaVoluntarios).toBe(false);
+  });
+
   it('NEVER leaks source_ref or any field outside the allowlist', () => {
     const dirty = loc() as LocationWithNeeds & Record<string, unknown>;
     dirty.source_ref = 'https://terremotovenezuela.com/api/buildings/42';

@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react';
 
-import { Search, X, type LucideIcon } from 'lucide-react';
+import { HeartHandshake, Search, X, type LucideIcon } from 'lucide-react';
 
 import { Input, Select } from '@/components/ui/form';
 import { EMERGENCY_STATUSES, NEED_CATEGORIES, URGENCIES, type ExplorerMode, type LocationFilters } from '@/lib/data/types';
@@ -34,7 +34,8 @@ export function Filters({
       value.ciudad ||
       value.status ||
       value.urgencia ||
-      value.categoria,
+      value.categoria ||
+      value.soloVoluntarios,
   );
   const isAyuda = mode === 'ayuda';
 
@@ -128,6 +129,22 @@ export function Filters({
                 </UrgencyFilterChip>
               );
             })}
+          </div>
+
+          <div
+            role="group"
+            aria-label="Filtrar por voluntarios"
+            className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1"
+          >
+            <FilterChip
+              active={Boolean(value.soloVoluntarios)}
+              icon={HeartHandshake}
+              onClick={() =>
+                set({ soloVoluntarios: value.soloVoluntarios ? undefined : true })
+              }
+            >
+              Acepta voluntarios
+            </FilterChip>
           </div>
         </div>
       )}
