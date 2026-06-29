@@ -38,6 +38,9 @@ export function SiteFooter() {
           <Link href="/guia" className="hover:text-ink">
             Guía
           </Link>
+          <Link href="/red-de-iniciativas" className="hover:text-ink">
+            Red de Iniciativas
+          </Link>
           <Link href="/api-docs" className="hover:text-ink">
             API
           </Link>
