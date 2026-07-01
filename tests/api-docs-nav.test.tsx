@@ -41,10 +41,11 @@ describe('API docs Markdown download', () => {
     expect(screen.getByText(/\/api\/v1/)).toBeInTheDocument();
   });
 
-  it('mentions the remote MCP server endpoint for AI agents', () => {
+  it('links to the MCP setup section further down the page', () => {
     render(<ApiDocsToolbar />);
 
-    expect(screen.getByText(/\/api\/mcp/)).toBeInTheDocument();
+    const link = screen.getByRole('link', { name: /conectar por mcp/i });
+    expect(link).toHaveAttribute('href', '#mcp');
   });
 });
 
