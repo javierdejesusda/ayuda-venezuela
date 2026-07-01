@@ -1,11 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseEnumParam, parsePagination, parseUuid } from '@/lib/api/params';
+import { clampPagination, parseEnumParam, parsePagination, parseUuid } from '@/lib/api/params';
 import { EMERGENCY_STATUSES } from '@/lib/data/types';
 
 function params(qs: string): URLSearchParams {
   return new URL(`http://localhost/x${qs}`).searchParams;
 }
+
+describe('clampPagination', () => {
+  it('defaults to cursor 0 and page size 20 when both are omitted', () => {
+    expect(clampPagination(undefined, undefined)).toEqual({ cursor: 0, limit: 20 });
+  });
+
+  it('floors a negative cursor to 0', () => {
+    expect(clampPagination(-5, undefined).cursor).toBe(0);
+  });
+
+  it('caps a limit above maxLimit and falls back to the default for non-positive limits', () => {
+    expect(clampPagination(0, 500, 100).limit).toBe(100);
+    expect(clampPagination(0, 0).limit).toBe(20);
+  });
+});
 
 describe('parsePagination', () => {
   it('defaults to cursor 0 and page size 20 when params are absent', () => {

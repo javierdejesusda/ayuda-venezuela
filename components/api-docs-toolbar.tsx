@@ -1,4 +1,4 @@
-import { Braces, FileDown, FileJson2 } from 'lucide-react';
+import { Braces, FileDown, FileJson2, Plug } from 'lucide-react';
 
 import { ApiBaseUrl } from '@/components/api-base-url';
 import { buttonClasses } from '@/components/ui/button';
@@ -9,6 +9,9 @@ const BADGES = ['v1.0.0', 'OpenAPI 3.1', 'Solo lectura'] as const;
 
 /** Absolute base URL every endpoint hangs off of. */
 const BASE_URL = `${SITE_URL}/api/v1`;
+
+/** Remote MCP endpoint exposing the same data as tools for AI agents. */
+const MCP_URL = `${SITE_URL}/api/mcp`;
 
 /**
  * Masthead for the API reference. A full-bleed band that sits flush above the
@@ -73,6 +76,13 @@ export function ApiDocsToolbar() {
             <FileJson2 className="h-4 w-4 text-brand-600" aria-hidden />
             OpenAPI JSON
           </a>
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-ink-soft">
+            <Plug className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+            <span>
+              Servidor MCP para agentes de IA:{' '}
+              <code className="break-all text-ink">{MCP_URL}</code>
+            </span>
+          </div>
         </div>
       </div>
     </header>

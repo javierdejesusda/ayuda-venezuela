@@ -40,6 +40,12 @@ describe('API docs Markdown download', () => {
 
     expect(screen.getByText(/\/api\/v1/)).toBeInTheDocument();
   });
+
+  it('mentions the remote MCP server endpoint for AI agents', () => {
+    render(<ApiDocsToolbar />);
+
+    expect(screen.getByText(/\/api\/mcp/)).toBeInTheDocument();
+  });
 });
 
 describe('API docs navigation access', () => {
