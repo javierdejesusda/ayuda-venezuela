@@ -19,7 +19,7 @@ interface ClientGuide {
 /**
  * The two connector-style clients this server is known to work with. Both
  * connect to the MCP URL from their own cloud infrastructure (not from the
- * user's device), so it must be a publicly reachable URL — hence the
+ * user's device), so it must be a publicly reachable URL, hence the
  * production `SITE_URL`, never localhost. `connectorsUrl` links straight into
  * each product's "add custom connector" screen (Claude: Customize > Connectors;
  * ChatGPT: Settings > Apps > Connectors > Advanced, which requires Developer
@@ -41,7 +41,7 @@ const CLIENTS: ClientGuide[] = [
 
 /**
  * Setup for connecting Claude and ChatGPT to the MCP server as a custom
- * connector — no code or terminal required. Lives on the Asistente page,
+ * connector, no code or terminal required. Lives on the Asistente page,
  * next to the chat, as the non-developer path to the same data.
  */
 export function McpConnectSection() {
@@ -52,7 +52,7 @@ export function McpConnectSection() {
         <h2 className="font-display text-lg font-semibold text-ink">Usa este asistente desde Claude o ChatGPT</h2>
       </div>
       <p className="mt-1 text-pretty text-sm text-ink-soft">
-        Conecta estos mismos datos a tu cuenta de Claude o ChatGPT como un &quot;conector&quot; —
+        Conecta estos mismos datos a tu cuenta de Claude o ChatGPT como un &quot;conector&quot;,
         sin instalar nada ni escribir código.
       </p>
 
