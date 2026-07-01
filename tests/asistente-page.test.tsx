@@ -85,4 +85,11 @@ describe('AsistentePage', () => {
 
     expect(screen.getByRole('alert')).toBeTruthy();
   });
+
+  it('offers a no-code MCP setup for Claude and ChatGPT below the chat', () => {
+    render(<AsistentePage />);
+
+    expect(screen.getByRole('heading', { name: /^claude$/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^chatgpt$/i })).toBeInTheDocument();
+  });
 });

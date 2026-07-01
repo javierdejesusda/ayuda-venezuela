@@ -5,6 +5,7 @@ import { MessageCircle, Send, Square } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useChat } from '@ai-sdk/react';
 
+import { McpConnectSection } from '@/components/mcp-connect-section';
 import { PageHeader } from '@/components/page-header';
 import { cn } from '@/lib/utils';
 
@@ -175,6 +176,8 @@ export default function AsistentePage() {
           la informacion antes de actuar.
         </p>
       </form>
+
+      <McpConnectSection />
     </div>
   );
 }

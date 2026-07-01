@@ -8,9 +8,27 @@ import type { Fundraiser, LocationRecord, NeedRecord } from './types';
 const QUAKE = '2026-06-24T22:10:00Z';
 const recent = '2026-06-25T11:30:00Z';
 
+/**
+ * Zone ids are real UUIDs (not `seed-*` slugs) so `GET /api/v1/zonas/{id}`
+ * and the `get_zona` MCP tool -- which both reject non-UUID ids via
+ * `parseUuid` before ever hitting the store -- can resolve seeded zones the
+ * same way they resolve production (Supabase-generated) rows.
+ */
+const ZONE_IDS = {
+  sanbernardino: '005eb5b3-99f0-4b69-bcde-8c55812912aa',
+  altamira: 'd64d1287-01fb-4f4a-bb15-cabc59b5ff26',
+  puertocabello: '6c109ab2-acd7-42dd-8ce5-fb3e0cfd4043',
+  moron: '2746d7b1-7023-4ed6-9ba0-ba16ddc6770a',
+  sanfelipe: '68dbbf71-8eb2-4edd-84dc-fd07e9db023a',
+  yumare: 'ab1d2847-c8b9-4908-b49e-4ba028812fe7',
+  maracay: 'b0df31a8-c841-4f2c-973a-6964849c6aa7',
+  catialamar: 'e145708a-a067-4d5f-bfe7-49cc6e291678',
+  losteques: '78eefc37-0903-4a15-84b3-1af042479396',
+} as const;
+
 const locations: LocationRecord[] = [
   {
-    id: 'seed-sanbernardino',
+    id: ZONE_IDS.sanbernardino,
     nombre: 'Edificio residencial San Bernardino',
     estado: 'Distrito Capital',
     ciudad: 'Caracas',
@@ -26,7 +44,7 @@ const locations: LocationRecord[] = [
     updatedAt: recent,
   },
   {
-    id: 'seed-altamira',
+    id: ZONE_IDS.altamira,
     nombre: 'Plaza Altamira - punto de acopio',
     estado: 'Miranda',
     ciudad: 'Caracas',
@@ -40,7 +58,7 @@ const locations: LocationRecord[] = [
     updatedAt: recent,
   },
   {
-    id: 'seed-puertocabello',
+    id: ZONE_IDS.puertocabello,
     nombre: 'Casco central de Puerto Cabello',
     estado: 'Carabobo',
     ciudad: 'Puerto Cabello',
@@ -54,7 +72,7 @@ const locations: LocationRecord[] = [
     updatedAt: recent,
   },
   {
-    id: 'seed-moron',
+    id: ZONE_IDS.moron,
     nombre: 'Sector La Cabrera, Morón',
     estado: 'Carabobo',
     ciudad: 'Morón',
@@ -68,7 +86,7 @@ const locations: LocationRecord[] = [
     updatedAt: recent,
   },
   {
-    id: 'seed-sanfelipe',
+    id: ZONE_IDS.sanfelipe,
     nombre: 'San Felipe centro',
     estado: 'Yaracuy',
     ciudad: 'San Felipe',
@@ -84,7 +102,7 @@ const locations: LocationRecord[] = [
     updatedAt: recent,
   },
   {
-    id: 'seed-yumare',
+    id: ZONE_IDS.yumare,
     nombre: 'Yumare',
     estado: 'Yaracuy',
     ciudad: 'Yumare',
@@ -98,7 +116,7 @@ const locations: LocationRecord[] = [
     updatedAt: recent,
   },
   {
-    id: 'seed-maracay',
+    id: ZONE_IDS.maracay,
     nombre: 'Maracay - Hospital Central',
     estado: 'Aragua',
     ciudad: 'Maracay',
@@ -114,7 +132,7 @@ const locations: LocationRecord[] = [
     updatedAt: recent,
   },
   {
-    id: 'seed-catialamar',
+    id: ZONE_IDS.catialamar,
     nombre: 'Catia La Mar',
     estado: 'La Guaira',
     ciudad: 'Catia La Mar',
@@ -128,7 +146,7 @@ const locations: LocationRecord[] = [
     updatedAt: recent,
   },
   {
-    id: 'seed-losteques',
+    id: ZONE_IDS.losteques,
     nombre: 'Los Teques - albergue municipal',
     estado: 'Miranda',
     ciudad: 'Los Teques',
@@ -145,44 +163,44 @@ const locations: LocationRecord[] = [
 
 const needs: NeedRecord[] = [
   // San Bernardino (derrumbe)
-  { id: 'sn-1', locationId: 'seed-sanbernardino', categoria: 'rescate', descripcion: 'Equipos y voluntarios para remoción de escombros', cantidad: 'Urgente', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
-  { id: 'sn-2', locationId: 'seed-sanbernardino', categoria: 'agua', descripcion: 'Agua potable para familias evacuadas', cantidad: '200 litros', urgencia: 'alta', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
-  { id: 'sn-3', locationId: 'seed-sanbernardino', categoria: 'medicinas', descripcion: 'Botiquines y analgésicos', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'sn-1', locationId: ZONE_IDS.sanbernardino, categoria: 'rescate', descripcion: 'Equipos y voluntarios para remoción de escombros', cantidad: 'Urgente', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'sn-2', locationId: ZONE_IDS.sanbernardino, categoria: 'agua', descripcion: 'Agua potable para familias evacuadas', cantidad: '200 litros', urgencia: 'alta', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
+  { id: 'sn-3', locationId: ZONE_IDS.sanbernardino, categoria: 'medicinas', descripcion: 'Botiquines y analgésicos', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
 
   // Altamira (acopio)
-  { id: 'al-1', locationId: 'seed-altamira', categoria: 'alimentos', descripcion: 'Alimentos no perecederos', cantidad: 'Lo que puedas', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
-  { id: 'al-2', locationId: 'seed-altamira', categoria: 'higiene', descripcion: 'Kits de higiene personal', urgencia: 'baja', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'al-1', locationId: ZONE_IDS.altamira, categoria: 'alimentos', descripcion: 'Alimentos no perecederos', cantidad: 'Lo que puedas', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'al-2', locationId: ZONE_IDS.altamira, categoria: 'higiene', descripcion: 'Kits de higiene personal', urgencia: 'baja', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
 
   // Puerto Cabello (derrumbe)
-  { id: 'pc-1', locationId: 'seed-puertocabello', categoria: 'refugio', descripcion: 'Carpas y espacios de refugio temporal', cantidad: '15 familias', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
-  { id: 'pc-2', locationId: 'seed-puertocabello', categoria: 'agua', descripcion: 'Agua potable', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
-  { id: 'pc-3', locationId: 'seed-puertocabello', categoria: 'ropa', descripcion: 'Ropa y calzado para niños y adultos', urgencia: 'media', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
+  { id: 'pc-1', locationId: ZONE_IDS.puertocabello, categoria: 'refugio', descripcion: 'Carpas y espacios de refugio temporal', cantidad: '15 familias', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'pc-2', locationId: ZONE_IDS.puertocabello, categoria: 'agua', descripcion: 'Agua potable', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'pc-3', locationId: ZONE_IDS.puertocabello, categoria: 'ropa', descripcion: 'Ropa y calzado para niños y adultos', urgencia: 'media', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
 
   // Morón (dañado)
-  { id: 'mo-1', locationId: 'seed-moron', categoria: 'energia', descripcion: 'Plantas eléctricas, baterías y linternas', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
-  { id: 'mo-2', locationId: 'seed-moron', categoria: 'medicinas', descripcion: 'Medicinas para crónicos (hipertensión, diabetes)', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'mo-1', locationId: ZONE_IDS.moron, categoria: 'energia', descripcion: 'Plantas eléctricas, baterías y linternas', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'mo-2', locationId: ZONE_IDS.moron, categoria: 'medicinas', descripcion: 'Medicinas para crónicos (hipertensión, diabetes)', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
 
   // San Felipe (derrumbe, crítico)
-  { id: 'sf-1', locationId: 'seed-sanfelipe', categoria: 'rescate', descripcion: 'Brigadas de rescate y perros entrenados', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
-  { id: 'sf-2', locationId: 'seed-sanfelipe', categoria: 'medicinas', descripcion: 'Insumos médicos y material de curación', cantidad: 'Hospital saturado', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
-  { id: 'sf-3', locationId: 'seed-sanfelipe', categoria: 'agua', descripcion: 'Agua potable y bidones', urgencia: 'alta', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
-  { id: 'sf-4', locationId: 'seed-sanfelipe', categoria: 'alimentos', descripcion: 'Comida para albergues', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'sf-1', locationId: ZONE_IDS.sanfelipe, categoria: 'rescate', descripcion: 'Brigadas de rescate y perros entrenados', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'sf-2', locationId: ZONE_IDS.sanfelipe, categoria: 'medicinas', descripcion: 'Insumos médicos y material de curación', cantidad: 'Hospital saturado', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'sf-3', locationId: ZONE_IDS.sanfelipe, categoria: 'agua', descripcion: 'Agua potable y bidones', urgencia: 'alta', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
+  { id: 'sf-4', locationId: ZONE_IDS.sanfelipe, categoria: 'alimentos', descripcion: 'Comida para albergues', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
 
   // Yumare (dañado)
-  { id: 'yu-1', locationId: 'seed-yumare', categoria: 'refugio', descripcion: 'Carpas y mantas, familias a la intemperie', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
-  { id: 'yu-2', locationId: 'seed-yumare', categoria: 'alimentos', descripcion: 'Agua y alimentos', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'yu-1', locationId: ZONE_IDS.yumare, categoria: 'refugio', descripcion: 'Carpas y mantas, familias a la intemperie', urgencia: 'alta', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'yu-2', locationId: ZONE_IDS.yumare, categoria: 'alimentos', descripcion: 'Agua y alimentos', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
 
   // Maracay (hospital)
-  { id: 'ma-1', locationId: 'seed-maracay', categoria: 'medicinas', descripcion: 'Insumos médicos y donantes de sangre', urgencia: 'alta', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
-  { id: 'ma-2', locationId: 'seed-maracay', categoria: 'transporte', descripcion: 'Vehículos para traslado de heridos', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'ma-1', locationId: ZONE_IDS.maracay, categoria: 'medicinas', descripcion: 'Insumos médicos y donantes de sangre', urgencia: 'alta', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
+  { id: 'ma-2', locationId: ZONE_IDS.maracay, categoria: 'transporte', descripcion: 'Vehículos para traslado de heridos', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
 
   // Catia La Mar (dañado)
-  { id: 'cl-1', locationId: 'seed-catialamar', categoria: 'ropa', descripcion: 'Ropa, mantas y cobijas', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
-  { id: 'cl-2', locationId: 'seed-catialamar', categoria: 'alimentos', descripcion: 'Alimentos no perecederos', urgencia: 'baja', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'cl-1', locationId: ZONE_IDS.catialamar, categoria: 'ropa', descripcion: 'Ropa, mantas y cobijas', urgencia: 'media', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
+  { id: 'cl-2', locationId: ZONE_IDS.catialamar, categoria: 'alimentos', descripcion: 'Alimentos no perecederos', urgencia: 'baja', status: 'pendiente', createdAt: QUAKE, updatedAt: recent },
 
   // Los Teques (albergue estable)
-  { id: 'lt-1', locationId: 'seed-losteques', categoria: 'alimentos', descripcion: 'Comida preparada para 80 personas', urgencia: 'media', status: 'cubierto', createdAt: QUAKE, updatedAt: recent },
-  { id: 'lt-2', locationId: 'seed-losteques', categoria: 'otro', descripcion: 'Voluntarios para organizar el albergue', urgencia: 'baja', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
+  { id: 'lt-1', locationId: ZONE_IDS.losteques, categoria: 'alimentos', descripcion: 'Comida preparada para 80 personas', urgencia: 'media', status: 'cubierto', createdAt: QUAKE, updatedAt: recent },
+  { id: 'lt-2', locationId: ZONE_IDS.losteques, categoria: 'otro', descripcion: 'Voluntarios para organizar el albergue', urgencia: 'baja', status: 'en_camino', createdAt: QUAKE, updatedAt: recent },
 ];
 
 const fundraisers: Fundraiser[] = [

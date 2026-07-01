@@ -1,4 +1,4 @@
-import { Braces, FileDown, FileJson2 } from 'lucide-react';
+import { Braces, FileDown, FileJson2, SquareTerminal } from 'lucide-react';
 
 import { ApiBaseUrl } from '@/components/api-base-url';
 import { buttonClasses } from '@/components/ui/button';
@@ -72,6 +72,10 @@ export function ApiDocsToolbar() {
           >
             <FileJson2 className="h-4 w-4 text-brand-600" aria-hidden />
             OpenAPI JSON
+          </a>
+          <a href="#mcp" className={buttonClasses('outline', 'md', 'w-full justify-center')}>
+            <SquareTerminal className="h-4 w-4 text-brand-600" aria-hidden />
+            Conectar por MCP
           </a>
         </div>
       </div>

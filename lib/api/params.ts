@@ -11,17 +11,33 @@ const DEFAULT_MAX_LIMIT = 100;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Reads `cursor` and `limit` from the query string. `cursor` is clamped to >= 0;
- * `limit` defaults to PAGE_SIZE, must be positive, and is capped at `maxLimit`.
+ * Clamps a raw cursor/limit pair to safe bounds: `cursor` floors at 0; `limit`
+ * defaults to PAGE_SIZE, must be positive, and is capped at `maxLimit`. Shared
+ * by `parsePagination` (query strings) and any caller that already has numeric
+ * values, e.g. the MCP tools in `app/api/mcp/route.ts`.
+ */
+export function clampPagination(
+  cursor: number | undefined,
+  limit: number | undefined,
+  maxLimit: number = DEFAULT_MAX_LIMIT,
+): { cursor: number; limit: number } {
+  const safeCursor = Math.max(0, cursor && Number.isFinite(cursor) ? cursor : 0);
+  const safeLimit =
+    limit != null && Number.isFinite(limit) && limit > 0 ? Math.min(limit, maxLimit) : PAGE_SIZE;
+  return { cursor: safeCursor, limit: safeLimit };
+}
+
+/**
+ * Reads `cursor` and `limit` from the query string and clamps them via
+ * `clampPagination`.
  */
 export function parsePagination(
   searchParams: URLSearchParams,
   maxLimit: number = DEFAULT_MAX_LIMIT,
 ): { cursor: number; limit: number } {
-  const cursor = Math.max(0, parseInt(searchParams.get('cursor') ?? '0', 10) || 0);
-  const rawLimit = parseInt(searchParams.get('limit') ?? '', 10);
-  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, maxLimit) : PAGE_SIZE;
-  return { cursor, limit };
+  const cursor = parseInt(searchParams.get('cursor') ?? '0', 10);
+  const limit = parseInt(searchParams.get('limit') ?? '', 10);
+  return clampPagination(cursor, limit, maxLimit);
 }
 
 /** Returns the query value for `key` when it is in `allowlist`, else null. */

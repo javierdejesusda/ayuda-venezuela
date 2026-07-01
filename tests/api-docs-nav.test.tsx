@@ -40,6 +40,13 @@ describe('API docs Markdown download', () => {
 
     expect(screen.getByText(/\/api\/v1/)).toBeInTheDocument();
   });
+
+  it('links to the MCP setup section further down the page', () => {
+    render(<ApiDocsToolbar />);
+
+    const link = screen.getByRole('link', { name: /conectar por mcp/i });
+    expect(link).toHaveAttribute('href', '#mcp');
+  });
 });
 
 describe('API docs navigation access', () => {

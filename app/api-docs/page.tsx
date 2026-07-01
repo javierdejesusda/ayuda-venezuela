@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import { ApiDocsToolbar } from '@/components/api-docs-toolbar';
 import { ApiReferenceEmbed } from '@/components/api-reference-embed';
+import { McpTerminalSection } from '@/components/mcp-terminal-section';
 
 export const metadata: Metadata = {
   title: 'API publica',
@@ -18,6 +19,7 @@ export default function ApiDocsPage() {
     <div className="relative left-1/2 right-1/2 -mx-[50vw] -mt-4 w-screen">
       <ApiDocsToolbar />
       <ApiReferenceEmbed />
+      <McpTerminalSection />
     </div>
   );
 }
