@@ -2,6 +2,7 @@
  * Pure, framework-free selectors shared by every data store implementation and
  * unit-tested directly. No I/O, no React, no Supabase.
  */
+import { roundCoord } from '@/lib/api/public-shape';
 import type {
   EmergencyStatus,
   LocationFilters,
@@ -76,19 +77,6 @@ export function applyFilters(
   filters: LocationFilters = {},
 ): LocationWithNeeds[] {
   return locations.filter((l) => matchesFilters(l, filters));
-}
-
-/** Decimal places kept for coordinates once they leave the server (~110m). */
-const COORD_DECIMALS = 3;
-
-/**
- * Rounds a coordinate to the shared public precision (~110m). The single
- * source of truth for coordinate precision; lib/api/public-shape.ts imports
- * this rather than keeping its own copy, so the two surfaces cannot drift.
- */
-export function roundCoord(value: number): number {
-  const factor = 10 ** COORD_DECIMALS;
-  return Math.round(value * factor) / factor;
 }
 
 /**
