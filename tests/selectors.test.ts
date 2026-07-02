@@ -7,6 +7,7 @@ import {
   globalStats,
   resolveAyudaPinTone,
   sortLocations,
+  toClientSafeLocation,
   withSummary,
 } from '@/lib/data/selectors';
 import type { LocationRecord, LocationWithNeeds, NeedRecord } from '@/lib/data/types';
@@ -282,5 +283,38 @@ describe('resolveAyudaPinTone', () => {
       need({ id: 'n2', locationId: 'g', urgencia: 'media', status: 'pendiente' }),
     ]);
     expect(resolveAyudaPinTone(loc)).toBe('warning');
+  });
+});
+
+describe('toClientSafeLocation', () => {
+  it('removes reporter contact name and phone', () => {
+    const loc = withSummary(
+      baseLocation({ contactoNombre: 'Ana Reportera', contactoTelefono: '+58 412 1234567' }),
+      [],
+    );
+    const safe = toClientSafeLocation(loc);
+    expect(safe).not.toHaveProperty('contactoNombre');
+    expect(safe).not.toHaveProperty('contactoTelefono');
+  });
+
+  it('rounds lat/lng to 3 decimals (~110m)', () => {
+    const loc = withSummary(baseLocation({ lat: 10.123456, lng: -68.987654 }), []);
+    const safe = toClientSafeLocation(loc);
+    expect(safe.lat).toBe(10.123);
+    expect(safe.lng).toBe(-68.988);
+  });
+
+  it('preserves null coordinates instead of rounding them', () => {
+    const loc = withSummary(baseLocation({ lat: null, lng: null }), []);
+    const safe = toClientSafeLocation(loc);
+    expect(safe.lat).toBeNull();
+    expect(safe.lng).toBeNull();
+  });
+
+  it('leaves non-PII fields untouched', () => {
+    const loc = withSummary(baseLocation({ id: 'h', nombre: 'Zona h' }), []);
+    const safe = toClientSafeLocation(loc);
+    expect(safe.id).toBe('h');
+    expect(safe.nombre).toBe('Zona h');
   });
 });

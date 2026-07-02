@@ -42,9 +42,10 @@ To help us assess and fix the issue quickly, please include:
 
 This is an emergency-response tool, and some design choices are intentional. The following are by design and are not vulnerabilities:
 
-- **Public anon key.** The Supabase anon key is shipped in the browser bundle on purpose. It is public by design. The `service_role` and any other secret keys are never exposed.
-- **Open row-level security.** To let anyone report and update needs without an account, RLS allows read, insert, and update. Delete is not allowed. This open model is intentional; moderation is future work.
+- **No login.** Anyone can report a zone or post a need without an account. Moderation of report contents is future work.
 - **Demo mode behavior.** With no environment variables set, the app runs against an in-memory store with sample data, and data is not shared between users. This local-only behavior is expected.
+
+Data access is server-only: the app authenticates to Supabase with `SUPABASE_SECRET_KEY` (a server-only, service_role-equivalent key that never ships to the browser), and the anon client has no direct table access. Realtime broadcasts a PII-free signal row, not report contents, so the browser learns only that something changed and re-fetches through the server. Public coordinates are rounded to roughly 110 m of precision; reporter contact details are shown only on the single zone a visitor is viewing, never on bulk surfaces.
 
 ### In scope
 
@@ -59,8 +60,11 @@ We are especially interested in issues such as:
 
 ### Out of scope
 
-- The public anon key.
-- The known open RLS model (read, insert, and update allowed; no delete).
+- The open, no-login reporting model (anyone can create a report or need).
 - Demo-mode, local-only data behavior.
+
+## Acknowledgments
+
+- Cris (Build4Venezuela) for responsibly disclosing issue #54: anon clients could bulk-read reporter PII and exact coordinates, and write directly to `locations`/`needs`, bypassing the server-side report throttle.
 
 Thank you for helping keep Apoyo Venezuela safe for the people who depend on it.

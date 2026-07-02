@@ -77,6 +77,18 @@ describe('GET /api/zonas', () => {
     expect(body.items[0].status).toBe('dano_parcial');
   });
 
+  it('rounds returned coordinates to 3 decimals (~110m)', async () => {
+    const withCoords = loc('l1', { lat: 10.123456, lng: -68.987654 });
+    mockListLocationsPage.mockResolvedValue({ items: [withCoords], total: 1 });
+
+    const req = new Request('http://localhost/api/zonas');
+    const res = await GET(req);
+    const body = await res.json();
+
+    expect(body.items[0].lat).toBe(10.123);
+    expect(body.items[0].lng).toBe(-68.988);
+  });
+
   it('passes estado filter to the store', async () => {
     mockListLocationsPage.mockResolvedValue({ items: [], total: 0 });
 

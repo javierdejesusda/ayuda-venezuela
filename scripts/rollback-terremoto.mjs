@@ -4,32 +4,24 @@
  * the photos it re-hosted under `fotos/terremoto/`. Organic (user-submitted)
  * rows and other imports (e.g. ayudaencamino.com) are never touched.
  *
- * Credentials from the environment: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+ * Credentials from the environment: SUPABASE_URL, SUPABASE_SECRET_KEY (preferred, falls back to SUPABASE_SERVICE_ROLE_KEY).
  *
  * Usage:
  *   node scripts/rollback-terremoto.mjs           # dry run (counts only)
  *   node scripts/rollback-terremoto.mjs --yes      # actually delete
  */
 import { createClient } from '@supabase/supabase-js';
+import { requireEnv, requireServiceKey } from './lib/env.mjs';
 
 const BUCKET = 'fotos';
 const PREFIX = 'terremoto';
 const SOURCE_MATCH = '%terremotovenezuela.com%';
 
-function requireEnv(name) {
-  const value = process.env[name];
-  if (!value) {
-    console.error(`Missing required env var: ${name}`);
-    process.exit(1);
-  }
-  return value;
-}
-
 async function main() {
   const confirm = process.argv.includes('--yes');
   const supabase = createClient(
     requireEnv('SUPABASE_URL'),
-    requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
+    requireServiceKey(),
     { auth: { persistSession: false } },
   );
 

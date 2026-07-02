@@ -7,6 +7,7 @@
  * ids, throttle hashes, exact accuracy) can never leak into a public response,
  * even if it is later added to the domain model.
  */
+import { roundCoord } from '@/lib/data/selectors';
 import {
   EMERGENCY_STATUSES,
   NEED_CATEGORIES,
@@ -26,10 +27,9 @@ import type {
   Urgency,
 } from '@/lib/data/types';
 
-/** Number of decimal places kept for public coordinates (3 decimals is ~110m). */
-const COORD_DECIMALS = 3;
+export { roundCoord };
 
-/** Human-readable label for the reduced coordinate precision. */
+/** Human-readable label for the reduced coordinate precision (mirrors roundCoord's 3-decimal precision). */
 const COORD_PRECISION_LABEL = '~110m';
 
 export interface PublicUbicacion {
@@ -108,12 +108,6 @@ export interface PublicStats {
   pedidosAbiertos: number;
   pedidosPorCategoria: Record<NeedCategory, number>;
   pedidosPorUrgencia: Record<Urgency, number>;
-}
-
-/** Rounds a single coordinate to the public precision (3 decimals). */
-export function roundCoord(value: number): number {
-  const factor = 10 ** COORD_DECIMALS;
-  return Math.round(value * factor) / factor;
 }
 
 function toUbicacion(lat: number | null, lng: number | null): PublicUbicacion | null {

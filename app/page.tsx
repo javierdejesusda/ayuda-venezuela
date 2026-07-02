@@ -7,7 +7,7 @@ import { RescueAdvisory } from '@/components/rescue-advisory';
 import { SeismicTicker } from '@/components/seismic-ticker';
 import { SharePanel } from '@/components/share-panel';
 import { loadHomeData } from '@/lib/data/home';
-import { stripContactPii } from '@/lib/data/selectors';
+import { toClientSafeLocation } from '@/lib/data/selectors';
 import { getStore, PAGE_SIZE } from '@/lib/data/store';
 import { loadSismos } from '@/lib/sismos/load';
 
@@ -23,8 +23,9 @@ export default async function HomePage() {
 
   // Embed the full server-loaded set for the map (no per-visitor fetch) and a
   // bounded first page for the list, both with reporter contact PII stripped
-  // since neither surface displays it. listLocations() returns the sorted set.
-  const mapLocations = locations.map(stripContactPii);
+  // and coordinates rounded to ~110m, since neither surface needs exact
+  // precision. listLocations() returns the sorted set.
+  const mapLocations = locations.map(toClientSafeLocation);
   const initialLocations = mapLocations.slice(0, PAGE_SIZE);
   const initialTotal = mapLocations.length;
 

@@ -54,13 +54,12 @@ describe('RealtimeRefresher', () => {
     expect(supabase.channel).not.toHaveBeenCalled();
   });
 
-  it('subscribes to locations and needs on the home route', () => {
+  it('subscribes to the PII-free realtime_signal table on the home route', () => {
     pathname = '/';
     render(<RealtimeRefresher />);
     expect(supabase.channel).toHaveBeenCalledTimes(1);
     const tables = channel.on.mock.calls.map((call) => (call[1] as { table: string }).table);
-    expect(tables).toContain('locations');
-    expect(tables).toContain('needs');
+    expect(tables).toEqual(['realtime_signal']);
   });
 
   it('subscribes on a zona detail route', () => {

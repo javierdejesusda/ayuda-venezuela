@@ -8,7 +8,7 @@
  * Non-Venezuela records (7 Colombia + 2 Spain centers) are skipped and counted.
  *
  * Credentials:
- *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY   - our project (write target, skip in --dry-run)
+ *   SUPABASE_URL, SUPABASE_SECRET_KEY (preferred, falls back to SUPABASE_SERVICE_ROLE_KEY) - our project (write target, skip in --dry-run)
  *   AYUDAPARA_URL  (default: https://yqcwttcbweqicdyfwseb.supabase.co/rest/v1)
  *   AYUDAPARA_KEY  (default: publishable anon key for ayudaparavenezuela.com)
  *
@@ -18,6 +18,7 @@
  *   node --env-file=.env.local scripts/import-ayudapara.mjs
  */
 import { createClient } from '@supabase/supabase-js';
+import { requireEnv, requireServiceKey } from './lib/env.mjs';
 
 import { mapCenter, mapHelpPoint } from './ayudapara-transform.mjs';
 
@@ -34,15 +35,6 @@ function parseArgs(argv) {
     else if (a === '--concurrency') args.concurrency = Number(argv[(i += 1)]);
   }
   return args;
-}
-
-function requireEnv(name) {
-  const value = process.env[name];
-  if (!value) {
-    console.error(`Missing required env var: ${name}`);
-    process.exit(1);
-  }
-  return value;
 }
 
 async function fetchSourceTable(tableName) {
@@ -160,7 +152,7 @@ async function main() {
   if (!args.dryRun) {
     supabase = createClient(
       requireEnv('SUPABASE_URL'),
-      requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
+      requireServiceKey(),
       { auth: { persistSession: false } },
     );
   }

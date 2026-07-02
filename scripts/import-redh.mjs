@@ -13,7 +13,7 @@
  * re-running or overlapping slices never duplicate records.
  *
  * Credentials from the environment (never committed):
- *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *   SUPABASE_URL, SUPABASE_SECRET_KEY (preferred, falls back to SUPABASE_SERVICE_ROLE_KEY)
  *
  * Usage:
  *   node --env-file=.env.local scripts/import-redh.mjs --dry-run
@@ -24,6 +24,7 @@ import { argv } from 'node:process';
 import { pathToFileURL } from 'node:url';
 
 import { createClient } from '@supabase/supabase-js';
+import { requireEnv, requireServiceKey } from './lib/env.mjs';
 
 import { mapInstitution, mapShelter } from './redh-transform.mjs';
 
@@ -41,15 +42,6 @@ function parseArgs(argv) {
     else if (a === '--concurrency') args.concurrency = Number(argv[(i += 1)]);
   }
   return args;
-}
-
-function requireEnv(name) {
-  const value = process.env[name];
-  if (!value) {
-    console.error(`Missing required env var: ${name}`);
-    process.exit(1);
-  }
-  return value;
 }
 
 async function fetchJson(path) {
@@ -177,7 +169,7 @@ async function main() {
   if (!args.dryRun) {
     supabase = createClient(
       requireEnv('SUPABASE_URL'),
-      requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
+      requireServiceKey(),
       { auth: { persistSession: false } },
     );
   }

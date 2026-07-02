@@ -58,12 +58,15 @@ export function RealtimeRefresher({
       }, REFRESH_DEBOUNCE_MS);
     };
 
+    // Subscribes to a singleton signal row instead of locations/needs directly,
+    // so realtime no longer broadcasts report contents (PII, exact coords) to
+    // every browser; a trigger bumps the row on any write. Before the lockdown
+    // migration creates the table this subscription simply receives no events.
     let channel: ReturnType<typeof supabase.channel> | null = null;
     try {
       channel = supabase
         .channel('apoyo-venezuela-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'locations' }, scheduleRefresh)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'needs' }, scheduleRefresh)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'realtime_signal' }, scheduleRefresh)
         .subscribe((status) => {
           const { live, settled } = interpretChannelStatus(status);
           if (settled) onStatusChange?.(live);

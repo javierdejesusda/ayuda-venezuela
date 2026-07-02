@@ -82,7 +82,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 
 When both are set, the app uses Supabase automatically instead of demo mode.
 
-> The anon key is public by design (it ships in the browser bundle). Never expose the `service_role` key or any secret key.
+For production, also set `SUPABASE_SECRET_KEY` (a server-only, service_role-equivalent key). All server-side data access prefers this key over the anon key, and the anon client has no direct table access once the lockdown migration is applied.
+
+```bash
+SUPABASE_SECRET_KEY=<your-secret-key>
+```
+
+> `SUPABASE_SECRET_KEY` is never prefixed with `NEXT_PUBLIC_`, so it never ships in the browser bundle. The anon key still ships in the bundle (it is used for demo/local fallback and browser realtime), but it no longer has direct table access in production; never expose the `service_role` key or any secret key beyond the server environment.
 
 ## Address autocomplete (Mapbox)
 
@@ -106,7 +112,7 @@ supabase db push
 
 Alternatively, paste the SQL into the SQL editor in the Supabase panel.
 
-Row Level Security allows **read, insert, and update** (this is an emergency tool with no login) and does **not** allow delete. Public delete stays closed on purpose so nobody can wipe another person's report.
+The server reads and writes with `SUPABASE_SECRET_KEY`, which bypasses Row Level Security. The anon and authenticated roles have no direct table grants on `locations` or `needs`: every read and write goes through the server (Server Components, Route Handlers, Server Actions), so this is still an emergency tool with no login, just without exposing the tables directly to anon clients. Status updates route through `SECURITY DEFINER` RPCs; delete is never exposed publicly. Public delete stays closed on purpose so nobody can wipe another person's report.
 
 To remove an erroneous report, a maintainer runs the admin script (it uses the authenticated Supabase CLI, so it needs no service-role key). It deletes the location row, its needs cascade, and its Storage photos:
 

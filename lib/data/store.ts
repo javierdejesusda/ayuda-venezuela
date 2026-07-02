@@ -74,8 +74,23 @@ let cached: DataStore | null = null;
 export function getStore(): DataStore {
   if (cached) return cached;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  cached = url && key ? createSupabaseStore(url, key) : memoryStore;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Demo/live detection matches schemas.ts and supabase-browser.ts exactly.
+  if (!url || !anonKey) {
+    cached = memoryStore;
+    return cached;
+  }
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
+  if (!secretKey) {
+    // Fail loud rather than silently using the anon key: once the lockdown
+    // migration is applied, anon has no table access, so a silent fallback
+    // would read/write nothing and look like an empty, working app during
+    // an emergency instead of a broken deploy.
+    throw new Error(
+      'SUPABASE_SECRET_KEY is required in production. Set it before deploying (see supabase/migrations/20260703010000_lock_anon_pii_and_writes.sql).',
+    );
+  }
+  cached = createSupabaseStore(url, secretKey);
   return cached;
 }
 
