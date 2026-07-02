@@ -149,13 +149,13 @@ export default function PrivacidadPage() {
         <Card>
           <p>
             Marcar un punto exacto en el mapa es opcional. Si no lo marcas, la zona se muestra solo
-            con la ubicación en texto que escribas (estado, ciudad y sector). Si marcas un punto,
-            el reporte aparece en el mapa del sitio en ese lugar.
+            con la ubicación en texto que escribas (estado, ciudad y sector).
           </p>
           <p>
-            En nuestra <span className="font-medium text-ink">API pública de datos</span>, las
-            coordenadas se redondean a unos 110 metros (3 decimales), para que la información
-            abierta no exponga una dirección exacta.
+            Las coordenadas que se muestran públicamente (en el{' '}
+            <span className="font-medium text-ink">mapa</span>, los listados y la API) se redondean
+            a aproximadamente 110 metros para proteger la ubicación exacta de quienes reportan. La
+            ubicación precisa solo se usa del lado del servidor y no se expone.
           </p>
         </Card>
       </section>

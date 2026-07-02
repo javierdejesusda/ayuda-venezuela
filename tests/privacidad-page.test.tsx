@@ -40,9 +40,12 @@ describe('PrivacidadPage', () => {
     expect(bodyText()).toMatch(/sin cuenta|sin registro|no requiere.*cuenta|sin iniciar sesi/);
   });
 
-  it('mentions the reduced coordinate precision of the public API', () => {
+  it('states public coordinates (map, list, API) are rounded and precise location stays server-side', () => {
     render(<PrivacidadPage />);
-    expect(bodyText()).toContain('110');
+    const text = bodyText();
+    expect(text).toContain('110');
+    expect(text).toMatch(/del lado del servidor|no se expone/);
+    expect(text).toMatch(/listado|lista/);
   });
 
   it('mentions that photo metadata (EXIF/GPS) is removed', () => {
