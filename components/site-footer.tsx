@@ -1,7 +1,8 @@
 import Link from 'next/link';
 
-import { ExternalLink, TriangleAlert } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
+import { EmergencyDisclaimer } from '@/components/emergency-disclaimer';
 import { BrandMark } from '@/components/ui/brand-mark';
 import { OpenSourceCallout } from '@/components/open-source-callout';
 import { DESAPARECIDOS_URL } from '@/lib/constants';
@@ -44,6 +45,9 @@ export function SiteFooter() {
           <Link href="/api-docs" className="hover:text-ink">
             API
           </Link>
+          <Link href="/privacidad" className="hover:text-ink">
+            Privacidad
+          </Link>
           <a
             href={DESAPARECIDOS_URL}
             target="_blank"
@@ -54,13 +58,13 @@ export function SiteFooter() {
           </a>
         </nav>
 
-        <div className="flex items-start gap-2 rounded-xl border border-border bg-canvas p-3 text-xs text-ink-soft">
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
-          <p>
-            Iniciativa ciudadana sin afiliación política. La información es aportada por la
-            comunidad: <span className="font-medium text-ink">verifica antes de actuar o compartir</span>.
-            Ante una emergencia que ponga en riesgo la vida, llama al 911.
+        <div className="space-y-3">
+          <p className="text-xs text-ink-soft">
+            Iniciativa ciudadana{' '}
+            <span className="font-medium text-ink">sin afiliación política</span>. La información
+            es aportada por la comunidad: verifícala antes de actuar o compartir.
           </p>
+          <EmergencyDisclaimer />
         </div>
 
         <OpenSourceCallout />

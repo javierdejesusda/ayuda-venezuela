@@ -3,6 +3,7 @@ import React from 'react';
 
 import { Megaphone } from 'lucide-react';
 
+import { EmergencyDisclaimer } from '@/components/emergency-disclaimer';
 import { PageHeader } from '@/components/page-header';
 import ReportLocationForm from '@/components/report-location-form';
 
@@ -19,6 +20,7 @@ export default function ReportarPage(): React.JSX.Element {
         title="Reportar una zona"
         description="Comparte una zona afectada que necesita ayuda. Tu reporte ayuda a coordinar la respuesta, zona por zona."
       />
+      <EmergencyDisclaimer className="mt-6" />
       <div className="mt-8">
         <ReportLocationForm />
       </div>
