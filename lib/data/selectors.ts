@@ -2,6 +2,7 @@
  * Pure, framework-free selectors shared by every data store implementation and
  * unit-tested directly. No I/O, no React, no Supabase.
  */
+import { roundCoord } from '@/lib/api/public-shape';
 import type {
   EmergencyStatus,
   LocationFilters,
@@ -79,15 +80,18 @@ export function applyFilters(
 }
 
 /**
- * Removes reporter contact PII (name + phone) from a location for the bulk
- * list/map surfaces, which never render it. The zona detail page still shows
- * the phone, but it reads through getLocation rather than these bulk payloads,
- * so stripping here keeps phone numbers out of the home page and /api/zonas.
+ * Strips reporter contact PII (name + phone) and rounds coordinates to ~110m
+ * before a location reaches the browser (home map/list, /api/zonas). The
+ * zona detail page still shows the exact phone and coordinates, but it reads
+ * through getLocation rather than these bulk payloads, so this stays out of
+ * that path.
  */
-export function stripContactPii(location: LocationWithNeeds): LocationWithNeeds {
+export function toClientSafeLocation(location: LocationWithNeeds): LocationWithNeeds {
   const copy = { ...location };
   delete copy.contactoNombre;
   delete copy.contactoTelefono;
+  copy.lat = copy.lat === null ? null : roundCoord(copy.lat);
+  copy.lng = copy.lng === null ? null : roundCoord(copy.lng);
   return copy;
 }
 

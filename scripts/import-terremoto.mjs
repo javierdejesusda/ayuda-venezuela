@@ -6,7 +6,7 @@
  * so re-running, overlapping slices, or parallel workers never duplicate.
  *
  * Credentials come from the environment (never committed):
- *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY   - our project (write target)
+ *   SUPABASE_URL, SUPABASE_SECRET_KEY (preferred, falls back to SUPABASE_SERVICE_ROLE_KEY) - our project (write target)
  *   TERREMOTO_REST  (default: source PostgREST base)
  *   TERREMOTO_KEY   (source public anon/publishable key - shipped in their app)
  *
@@ -16,6 +16,7 @@
  *   node scripts/import-terremoto.mjs --dry-run --limit 5
  */
 import { createClient } from '@supabase/supabase-js';
+import { requireEnv, requireServiceKey } from './lib/env.mjs';
 
 import { isMissingPersonReport, toProxyUrl, transformBuilding } from './terremoto-transform.mjs';
 
@@ -38,15 +39,6 @@ function parseArgs(argv) {
     else if (a === '--concurrency') args.concurrency = Number(argv[(i += 1)]);
   }
   return args;
-}
-
-function requireEnv(name) {
-  const value = process.env[name];
-  if (!value) {
-    console.error(`Missing required env var: ${name}`);
-    process.exit(1);
-  }
-  return value;
 }
 
 /** Fetch a stable, ordered slice of source rows. */
@@ -176,7 +168,7 @@ async function pool(items, concurrency, mapper) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const url = requireEnv('SUPABASE_URL');
-  const serviceKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
+  const serviceKey = requireServiceKey();
   const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
 
   const rows = await fetchSourceSlice(args.offset, args.limit);

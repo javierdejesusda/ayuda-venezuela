@@ -74,8 +74,28 @@ let cached: DataStore | null = null;
 export function getStore(): DataStore {
   if (cached) return cached;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  cached = url && key ? createSupabaseStore(url, key) : memoryStore;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Demo/live detection matches schemas.ts and supabase-browser.ts exactly.
+  if (!url || !anonKey) {
+    cached = memoryStore;
+    return cached;
+  }
+  // This app is fail-open by design (see report throttle/rate limiting), so
+  // a hard throw here is wrong: getStore() is called as an argument (e.g.
+  // loadHomeData(getStore())), outside the try/catch that loadHomeData/loadZone
+  // wrap around the store calls themselves, so throwing would crash the route
+  // instead of degrading. Log and fall back to the anon key instead: this
+  // keeps the code safe to deploy before SUPABASE_SECRET_KEY is set, and once
+  // the lockdown migration revokes anon table access, the resulting
+  // permission errors are exactly what those try/catch wrappers already
+  // catch and degrade from, with this log line pinpointing the root cause.
+  const key = process.env.SUPABASE_SECRET_KEY;
+  if (!key) {
+    console.error(
+      'SUPABASE_SECRET_KEY is not set; falling back to the anon key. Set it before the lockdown migration is applied, or reads/writes will start failing.',
+    );
+  }
+  cached = createSupabaseStore(url, key || anonKey);
   return cached;
 }
 

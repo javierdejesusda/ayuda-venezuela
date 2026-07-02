@@ -55,7 +55,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 ```
 
-When both are present, the app uses Supabase automatically. The anon key is public by design (it ships in the browser bundle). Never commit a `.env` file, and never expose the service_role key or any other secret key.
+When both are present, the app uses Supabase automatically. In production, the server also uses `SUPABASE_SECRET_KEY` (server-only, service_role-equivalent) for all database access; the anon key ships in the browser bundle by design but no longer has direct table access. Never commit a `.env` file, and never expose `SUPABASE_SECRET_KEY`, the `service_role` key, or any other secret key.
 
 The database schema lives in `supabase/migrations/`. Apply it with `supabase db push` or by pasting the SQL into the Supabase panel.
 

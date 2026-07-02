@@ -4,32 +4,24 @@
  * those locations are removed by the on-delete-cascade FK. Other imports and
  * organic rows are never touched.
  *
- * Credentials from the environment: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+ * Credentials from the environment: SUPABASE_URL, SUPABASE_SECRET_KEY (preferred, falls back to SUPABASE_SERVICE_ROLE_KEY).
  *
  * Usage:
  *   node --env-file=.env.local scripts/rollback-redh.mjs        # dry run
  *   node --env-file=.env.local scripts/rollback-redh.mjs --yes  # delete
  */
 import { createClient } from '@supabase/supabase-js';
+import { requireEnv, requireServiceKey } from './lib/env.mjs';
 
 import { SOURCE_PREFIX } from './redh-transform.mjs';
 
 const SOURCE_MATCH = `${SOURCE_PREFIX}:%`;
 
-function requireEnv(name) {
-  const value = process.env[name];
-  if (!value) {
-    console.error(`Missing required env var: ${name}`);
-    process.exit(1);
-  }
-  return value;
-}
-
 async function main() {
   const confirm = process.argv.includes('--yes');
   const supabase = createClient(
     requireEnv('SUPABASE_URL'),
-    requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
+    requireServiceKey(),
     { auth: { persistSession: false } },
   );
 

@@ -4,7 +4,7 @@
  * user requests additional pages via the "Ver más" button.
  * Supports ?all=true to return every matching zone for the map surface.
  */
-import { stripContactPii } from '@/lib/data/selectors';
+import { toClientSafeLocation } from '@/lib/data/selectors';
 import { getStore, PAGE_SIZE } from '@/lib/data/store';
 import type { LocationFilters } from '@/lib/data/types';
 import { EMERGENCY_STATUSES, NEED_CATEGORIES, URGENCIES } from '@/lib/data/types';
@@ -44,9 +44,10 @@ export async function GET(request: Request): Promise<Response> {
   const offset = all ? 0 : cursor;
   const limit = all ? Infinity : PAGE_SIZE;
   const { items, total } = await getStore().listLocationsPage(filters, offset, limit);
-  // The list/map surfaces never display reporter contact details; strip them so
-  // phone numbers are not served in bulk to every visitor.
-  const publicItems = items.map(stripContactPii);
+  // The list/map surfaces never display reporter contact details or need
+  // exact coordinates; strip PII and round coordinates before serving them
+  // in bulk to every visitor.
+  const publicItems = items.map(toClientSafeLocation);
   const nextCursor = all ? null : offset + items.length < total ? offset + items.length : null;
 
   return Response.json({ items: publicItems, total, nextCursor });
