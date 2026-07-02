@@ -1,11 +1,13 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useRef, useState, useTransition } from 'react';
 import {
   CircleDashed,
   Crosshair,
+  Eye,
   ImagePlus,
   MapPin,
   Send,
@@ -18,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Field, Input, Label, Select, Textarea } from '@/components/ui/form';
 import { MapSkeleton } from '@/components/ui/map-skeleton';
 import { getBrowserSupabase } from '@/lib/data/supabase-browser';
+import { stripImageMetadata } from '@/lib/data/exif-strip';
 import { validateFotoFile } from '@/lib/data/foto-validation';
 import {
   EMERGENCY_STATUSES,
@@ -140,6 +143,8 @@ export default function ReportLocationForm(): React.JSX.Element {
   const [fotos, setFotos] = useState<SelectedFoto[]>([]);
   const [fotoError, setFotoError] = useState<string | null>(null);
   const [aceptaVoluntarios, setAceptaVoluntarios] = useState(false);
+  const [contactoConsent, setContactoConsent] = useState(false);
+  const [consentError, setConsentError] = useState<string | null>(null);
 
   // Revoke any object URLs still held when the form unmounts to avoid leaks.
   useRevokeObjectUrlsOnUnmount(fotos.map((foto) => foto.previewUrl));
@@ -252,15 +257,19 @@ export default function ReportLocationForm(): React.JSX.Element {
 
     if (!client) {
       // Demo/local mode: embed images as data URLs so it works without Supabase.
-      return Promise.all(fotos.map((foto) => readFileAsDataUrl(foto.file)));
+      return Promise.all(
+        fotos.map(async (foto) => readFileAsDataUrl(await stripImageMetadata(foto.file))),
+      );
     }
 
     return Promise.all(
       fotos.map(async (foto) => {
-        const path = `${crypto.randomUUID()}-${sanitizeFilename(foto.file.name)}`;
+        // Strip EXIF/GPS metadata before the photo reaches the public bucket.
+        const safe = await stripImageMetadata(foto.file);
+        const path = `${crypto.randomUUID()}-${sanitizeFilename(safe.name)}`;
         const { error } = await client.storage
           .from('fotos')
-          .upload(path, foto.file, { upsert: false });
+          .upload(path, safe, { upsert: false });
         if (error) {
           throw new Error('No se pudieron subir las fotos. Intenta de nuevo.');
         }
@@ -273,6 +282,19 @@ export default function ReportLocationForm(): React.JSX.Element {
     e.preventDefault();
     setSubmitError(null);
     setFieldErrors({});
+    setConsentError(null);
+
+    // Contact fields publish to the public zona page, so require explicit
+    // consent before sending them. A report with no contact info is never
+    // gated - a legitimate emergency report must always go through.
+    const hasContacto =
+      values.contactoNombre.trim() !== '' || values.contactoTelefono.trim() !== '';
+    if (hasContacto && !contactoConsent) {
+      setConsentError(
+        'Confirma que aceptas publicar estos datos de contacto, o deja los campos vacíos.',
+      );
+      return;
+    }
 
     startTransition(async () => {
       let fotoUrls: string[];
@@ -601,45 +623,104 @@ export default function ReportLocationForm(): React.JSX.Element {
         />
       </Field>
 
-      {/* Contacto nombre (opcional) */}
-      <Field
-        label="Nombre del contacto"
-        htmlFor="contactoNombre"
-        hint="Opcional. Persona de referencia en la zona."
-        error={fieldErrors.contactoNombre}
-      >
-        <Input
-          id="contactoNombre"
-          name="contactoNombre"
-          value={values.contactoNombre}
-          onChange={handleChange}
-          placeholder="Ej. Juan Pérez"
-          maxLength={80}
-          aria-invalid={!!fieldErrors.contactoNombre}
-          disabled={isPending}
-        />
-      </Field>
+      {/* Contacto (opcional): estos campos se publican, así que llevan aviso y
+          consentimiento explícito antes de enviarse. */}
+      <section className="space-y-4 rounded-xl border border-border-strong bg-surface p-4 shadow-card sm:p-5">
+        <div>
+          <h2 className="text-sm font-semibold text-ink">Contacto de la zona</h2>
+          <p className="mt-1 text-xs text-ink-faint">
+            Opcional. Una persona de referencia para que quienes ayudan puedan comunicarse.
+          </p>
+        </div>
 
-      {/* Contacto teléfono (opcional) */}
-      <Field
-        label="Teléfono de contacto"
-        htmlFor="contactoTelefono"
-        hint="Opcional. Incluye el código de área."
-        error={fieldErrors.contactoTelefono}
-      >
-        <Input
-          id="contactoTelefono"
-          name="contactoTelefono"
-          value={values.contactoTelefono}
-          onChange={handleChange}
-          placeholder="Ej. 0414-1234567"
-          maxLength={40}
-          inputMode="tel"
-          autoComplete="tel"
-          aria-invalid={!!fieldErrors.contactoTelefono}
-          disabled={isPending}
-        />
-      </Field>
+        <div className="flex items-start gap-2.5 rounded-xl border border-warning/25 bg-warning/10 p-3">
+          <Eye className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
+          <p className="text-xs leading-relaxed text-ink-soft">
+            Lo que escribas aquí será <span className="font-semibold text-ink">público</span> y
+            visible para cualquier persona que consulte el reporte. Comparte solo datos que
+            puedas hacer públicos.{' '}
+            <Link
+              href="/privacidad"
+              className="font-medium text-brand-600 underline underline-offset-2 hover:text-brand-700"
+            >
+              Cómo tratamos tus datos
+            </Link>
+            .
+          </p>
+        </div>
+
+        <Field
+          label="Nombre del contacto"
+          htmlFor="contactoNombre"
+          hint="Opcional. Persona de referencia en la zona."
+          error={fieldErrors.contactoNombre}
+        >
+          <Input
+            id="contactoNombre"
+            name="contactoNombre"
+            value={values.contactoNombre}
+            onChange={handleChange}
+            placeholder="Ej. Juan Pérez"
+            maxLength={80}
+            aria-invalid={!!fieldErrors.contactoNombre}
+            disabled={isPending}
+          />
+        </Field>
+
+        <Field
+          label="Teléfono de contacto"
+          htmlFor="contactoTelefono"
+          hint="Opcional. Incluye el código de área."
+          error={fieldErrors.contactoTelefono}
+        >
+          <Input
+            id="contactoTelefono"
+            name="contactoTelefono"
+            value={values.contactoTelefono}
+            onChange={handleChange}
+            placeholder="Ej. 0414-1234567"
+            maxLength={40}
+            inputMode="tel"
+            autoComplete="tel"
+            aria-invalid={!!fieldErrors.contactoTelefono}
+            disabled={isPending}
+          />
+        </Field>
+
+        <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-border-strong bg-surface-2 px-4 py-3 transition-colors hover:border-brand-500">
+          <input
+            type="checkbox"
+            name="contacto_consent"
+            checked={contactoConsent}
+            onChange={(e) => {
+              setContactoConsent(e.target.checked);
+              if (e.target.checked) setConsentError(null);
+            }}
+            disabled={isPending}
+            aria-invalid={!!consentError}
+            aria-describedby={consentError ? 'contacto-consent-error' : undefined}
+            className="mt-0.5 size-4 accent-brand-600"
+          />
+          <span className="text-sm">
+            <span className="font-medium text-ink">
+              Entiendo que este contacto será público
+            </span>
+            <span className="mt-0.5 block text-xs text-ink-faint">
+              Confírmalo solo si tienes permiso para compartir estos datos.
+            </span>
+          </span>
+        </label>
+
+        {consentError && (
+          <p
+            id="contacto-consent-error"
+            role="alert"
+            className="text-xs font-medium text-danger"
+          >
+            {consentError}
+          </p>
+        )}
+      </section>
 
       {/* Fotos (opcional) */}
       <div className="space-y-2">
