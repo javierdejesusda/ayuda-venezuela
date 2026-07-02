@@ -29,15 +29,18 @@ afterEach(() => {
 });
 
 describe('getStore', () => {
-  it('throws instead of silently falling back to the anon key when SUPABASE_SECRET_KEY is not set', async () => {
+  it('logs an error and falls back to the anon key when SUPABASE_SECRET_KEY is not set', async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co';
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'anon-key';
     delete process.env.SUPABASE_SECRET_KEY;
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const { getStore } = await import('@/lib/data/store');
 
-    expect(() => getStore()).toThrow(/SUPABASE_SECRET_KEY/);
-    expect(createSupabaseStore).not.toHaveBeenCalled();
+    expect(() => getStore()).not.toThrow();
+    expect(createSupabaseStore).toHaveBeenCalledWith('https://example.supabase.co', 'anon-key');
+    expect(consoleError).toHaveBeenCalledWith(expect.stringMatching(/SUPABASE_SECRET_KEY/));
+    consoleError.mockRestore();
   });
 
   it('uses SUPABASE_SECRET_KEY when set', async () => {

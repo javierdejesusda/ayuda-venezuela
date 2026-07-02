@@ -80,17 +80,22 @@ export function getStore(): DataStore {
     cached = memoryStore;
     return cached;
   }
-  const secretKey = process.env.SUPABASE_SECRET_KEY;
-  if (!secretKey) {
-    // Fail loud rather than silently using the anon key: once the lockdown
-    // migration is applied, anon has no table access, so a silent fallback
-    // would read/write nothing and look like an empty, working app during
-    // an emergency instead of a broken deploy.
-    throw new Error(
-      'SUPABASE_SECRET_KEY is required in production. Set it before deploying (see supabase/migrations/20260703010000_lock_anon_pii_and_writes.sql).',
+  // This app is fail-open by design (see report throttle/rate limiting), so
+  // a hard throw here is wrong: getStore() is called as an argument (e.g.
+  // loadHomeData(getStore())), outside the try/catch that loadHomeData/loadZone
+  // wrap around the store calls themselves, so throwing would crash the route
+  // instead of degrading. Log and fall back to the anon key instead: this
+  // keeps the code safe to deploy before SUPABASE_SECRET_KEY is set, and once
+  // the lockdown migration revokes anon table access, the resulting
+  // permission errors are exactly what those try/catch wrappers already
+  // catch and degrade from, with this log line pinpointing the root cause.
+  const key = process.env.SUPABASE_SECRET_KEY;
+  if (!key) {
+    console.error(
+      'SUPABASE_SECRET_KEY is not set; falling back to the anon key. Set it before the lockdown migration is applied, or reads/writes will start failing.',
     );
   }
-  cached = createSupabaseStore(url, secretKey);
+  cached = createSupabaseStore(url, key || anonKey);
   return cached;
 }
 
